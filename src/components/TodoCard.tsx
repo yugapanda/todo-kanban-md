@@ -1,10 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Todo } from '../types';
-import { Calendar, Clock, Package, CheckCircle, XCircle, Timer, GripVertical, X, Plus, FileText, ExternalLink } from 'lucide-react';
-import { format, parse } from 'date-fns';
+import { Clock, Package, CheckCircle, XCircle, Timer, GripVertical, X, Plus, FileText, ExternalLink, CalendarDays } from 'lucide-react';
+import { format, parse, isBefore, isToday, addDays } from 'date-fns';
+import { ja } from 'date-fns/locale';
 import { invoke } from '@tauri-apps/api/core';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
 interface TodoCardProps {
   todo: Todo;
@@ -14,6 +18,7 @@ interface TodoCardProps {
   onUpdateTags?: (todoId: string, newTags: string[]) => void;
   onUpdateType?: (todoId: string, newType: string | undefined) => void;
   onUpdateNote?: (todoId: string, notePath: string) => void;
+  onUpdateDeadline?: (todoId: string, deadline: string | undefined, deadlineTime: string | undefined) => void;
 }
 
 const getTagColor = (tag: string) => {
@@ -37,16 +42,23 @@ const getTagColor = (tag: string) => {
   return colors[Math.abs(hash) % colors.length];
 };
 
-export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath, onUpdateTodo, onUpdateTags, onUpdateType, onUpdateNote }) => {
+export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath, onUpdateTodo, onUpdateTags, onUpdateType, onUpdateNote, onUpdateDeadline }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(todo.text);
   const [isEditingTags, setIsEditingTags] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [isEditingType, setIsEditingType] = useState(false);
   const [newType, setNewType] = useState('');
+  const [isEditingDeadline, setIsEditingDeadline] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(
+    todo.deadline ? parse(todo.deadline, 'yyyyMMdd', new Date()) : null
+  );
+  const [selectedTime, setSelectedTime] = useState(todo.deadlineTime || '');
+  const [calendarPosition, setCalendarPosition] = useState({ top: 0, left: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const typeInputRef = useRef<HTMLInputElement>(null);
+  const deadlineRef = useRef<HTMLDivElement>(null);
   const {
     attributes,
     listeners,
@@ -81,6 +93,7 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
       typeInputRef.current.select();
     }
   }, [isEditingType]);
+
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     // Prevent dragging while editing
@@ -193,10 +206,64 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     }
   };
 
+  const handleDeadlineChange = (date: Date | null) => {
+    setSelectedDate(date);
+    if (date && onUpdateDeadline) {
+      const deadlineStr = format(date, 'yyyyMMdd');
+      onUpdateDeadline(todo.id, deadlineStr, selectedTime || undefined);
+    } else if (!date && onUpdateDeadline) {
+      onUpdateDeadline(todo.id, undefined, undefined);
+      setSelectedTime('');
+    }
+  };
+
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = e.target.value;
+    setSelectedTime(time);
+    if (selectedDate && onUpdateDeadline) {
+      const deadlineStr = format(selectedDate, 'yyyyMMdd');
+      onUpdateDeadline(todo.id, deadlineStr, time || undefined);
+    }
+  };
+
+  const handleOpenCalendar = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (deadlineRef.current) {
+      const rect = deadlineRef.current.getBoundingClientRect();
+      setCalendarPosition({
+        top: rect.bottom + 5,
+        left: rect.left
+      });
+    }
+    setIsEditingDeadline(true);
+  };
+
+  const getDeadlineStatus = () => {
+    if (!todo.deadline) return null;
+    
+    try {
+      const deadlineDate = parse(todo.deadline, 'yyyyMMdd', new Date());
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      deadlineDate.setHours(0, 0, 0, 0);
+      
+      if (isBefore(deadlineDate, today)) {
+        return 'overdue';
+      } else if (isToday(deadlineDate)) {
+        return 'today';
+      } else if (isBefore(deadlineDate, addDays(today, 3))) {
+        return 'soon';
+      }
+      return 'future';
+    } catch {
+      return null;
+    }
+  };
+
   const formatDeadline = (deadline: string) => {
     try {
       const date = parse(deadline, 'yyyyMMdd', new Date());
-      return format(date, 'MMM d, yyyy');
+      return format(date, 'M月d日(E)', { locale: ja });
     } catch {
       return deadline;
     }
@@ -422,18 +489,76 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
       </div>
 
       <div className="todo-metadata">
-        {todo.deadline && (
-          <div className="todo-deadline">
-            <Calendar size={14} />
-            <span>{formatDeadline(todo.deadline)}</span>
-            {todo.deadlineTime && (
+        <div className="todo-deadline-section">
+          <div 
+            ref={deadlineRef}
+            className={`todo-deadline ${todo.deadline ? `deadline-${getDeadlineStatus()}` : ''}`}
+            onClick={handleOpenCalendar}
+            title="クリックして締切を設定"
+          >
+            <CalendarDays size={14} />
+            {todo.deadline ? (
               <>
-                <Clock size={14} />
-                <span>{todo.deadlineTime}</span>
+                <span>{formatDeadline(todo.deadline)}</span>
+                {todo.deadlineTime && (
+                  <>
+                    <Clock size={14} />
+                    <span>{todo.deadlineTime}</span>
+                  </>
+                )}
               </>
+            ) : (
+              <span className="deadline-placeholder">締切を設定</span>
             )}
           </div>
-        )}
+          {isEditingDeadline && ReactDOM.createPortal(
+            <>
+              <div 
+                className="deadline-picker-backdrop"
+                onClick={() => setIsEditingDeadline(false)}
+              />
+              <div 
+                className="deadline-picker-wrapper"
+                style={{
+                  top: `${calendarPosition.top}px`,
+                  left: `${calendarPosition.left}px`
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <DatePicker
+                  selected={selectedDate}
+                  onChange={handleDeadlineChange}
+                  dateFormat="yyyy/MM/dd"
+                  locale={ja}
+                  placeholderText="締切日を選択"
+                  isClearable
+                  inline
+                  calendarClassName="deadline-calendar"
+                />
+                <div className="deadline-time-section">
+                  <Clock size={14} />
+                  <input
+                    type="time"
+                    value={selectedTime}
+                    onChange={handleTimeChange}
+                    className="deadline-time-input"
+                    placeholder="時刻"
+                  />
+                </div>
+                <button
+                  className="deadline-close-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEditingDeadline(false);
+                  }}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </>,
+            document.body
+          )}
+        </div>
 
         {calculateTotalTime() && (
           <div className="todo-total-time">

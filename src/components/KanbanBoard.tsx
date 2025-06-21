@@ -385,6 +385,29 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
     await saveToFile(newData);
   };
 
+  // Handler for updating todo deadline
+  const handleUpdateDeadline = async (todoId: string, deadline: string | undefined, deadlineTime: string | undefined) => {
+    // Find the lane containing the todo
+    const laneWithTodo = data.lanes.find(lane =>
+      lane.todos.some(todo => todo.id === todoId)
+    );
+    
+    if (!laneWithTodo) return;
+
+    const newData: KanbanData = {
+      ...data,
+      lanes: updateLanes(data.lanes, laneWithTodo.id, lane => ({
+        ...lane,
+        todos: lane.todos.map(todo =>
+          todo.id === todoId ? { ...todo, deadline, deadlineTime } : todo
+        )
+      }))
+    };
+
+    onDataChange(newData);
+    await saveToFile(newData);
+  };
+
   // Handler for archiving done tasks
   const handleArchiveDone = async () => {
     const doneLane = data.lanes.find(lane => lane.name === 'Done');
@@ -576,6 +599,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
             onUpdateTags={handleUpdateTags}
             onUpdateType={handleUpdateType}
             onUpdateNote={handleUpdateNote}
+            onUpdateDeadline={handleUpdateDeadline}
             onRenameLane={handleRenameLane}
             onDeleteLane={handleDeleteLane}
             onAddLane={handleAddLane}

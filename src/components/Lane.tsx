@@ -17,6 +17,7 @@ interface LaneProps {
   onUpdateTags?: (todoId: string, newTags: string[]) => void;
   onUpdateType?: (todoId: string, newType: string | undefined) => void;
   onUpdateNote?: (todoId: string, notePath: string) => void;
+  onUpdateDeadline?: (todoId: string, deadline: string | undefined, deadlineTime: string | undefined) => void;
   onRenameLane?: (laneId: string, newName: string) => void;
   onDeleteLane?: (laneId: string) => void;
   onAddLane?: (name: string, afterLaneId: string) => void;
@@ -32,6 +33,7 @@ export const Lane: React.FC<LaneProps> = ({
   onUpdateTags,
   onUpdateType,
   onUpdateNote,
+  onUpdateDeadline,
   onRenameLane,
   onDeleteLane,
   onAddLane,
@@ -131,6 +133,7 @@ export const Lane: React.FC<LaneProps> = ({
               onUpdateTags={onUpdateTags} 
               onUpdateType={onUpdateType}
               onUpdateNote={onUpdateNote}
+              onUpdateDeadline={onUpdateDeadline}
             />
           ))}
         </SortableContext>
