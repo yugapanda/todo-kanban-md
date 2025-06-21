@@ -56,7 +56,8 @@ export const Lane: React.FC<LaneProps> = ({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
       handleAddTodo();
     } else if (e.key === 'Escape') {
       setNewTodoText('');
@@ -102,7 +103,7 @@ export const Lane: React.FC<LaneProps> = ({
               <input
                 type="text"
                 className="add-todo-input"
-                placeholder="新しいTodoを入力..."
+                placeholder={`新しいTodoを入力... (${/Mac|iPhone|iPad|iPod/.test(navigator.userAgent) ? 'Cmd' : 'Ctrl'}+Enter)`}
                 value={newTodoText}
                 onChange={(e) => setNewTodoText(e.target.value)}
                 onKeyDown={handleKeyPress}
