@@ -9,6 +9,7 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
+  DragOverEvent,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -188,6 +189,7 @@ const pipe = <T,>(...fns: Array<(arg: T) => T>): ((arg: T) => T) =>
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDataChange }) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeTodo, setActiveTodo] = useState<Todo | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -477,8 +479,15 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
     setActiveTodo(findTodoById(data.lanes, activeIdStr) || null);
   };
 
+  const handleDragOver = (event: DragOverEvent) => {
+    const { over } = event;
+    setOverId(over ? over.id as string : null);
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+
+    setOverId(null);
 
     if (!over) {
       setActiveId(null);
@@ -586,6 +595,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
       sensors={sensors}
       collisionDetection={closestCorners}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="kanban-board">
@@ -605,6 +615,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
             onAddLane={handleAddLane}
             onArchiveDone={handleArchiveDone}
             isLastLane={index === data.lanes.length - 1}
+            overId={overId}
+            activeId={activeId}
           />
         ))}
       </div>

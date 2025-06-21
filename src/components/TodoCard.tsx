@@ -19,6 +19,8 @@ interface TodoCardProps {
   onUpdateType?: (todoId: string, newType: string | undefined) => void;
   onUpdateNote?: (todoId: string, notePath: string) => void;
   onUpdateDeadline?: (todoId: string, deadline: string | undefined, deadlineTime: string | undefined) => void;
+  isOver?: boolean;
+  index?: number;
 }
 
 const getTagColor = (tag: string) => {
@@ -42,7 +44,7 @@ const getTagColor = (tag: string) => {
   return colors[Math.abs(hash) % colors.length];
 };
 
-export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath, onUpdateTodo, onUpdateTags, onUpdateType, onUpdateNote, onUpdateDeadline }) => {
+export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath, onUpdateTodo, onUpdateTags, onUpdateType, onUpdateNote, onUpdateDeadline, isOver }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(todo.text);
   const [isEditingTags, setIsEditingTags] = useState(false);
@@ -322,11 +324,13 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`todo-card ${isDragging ? 'dragging' : ''}`}
-    >
+    <>
+      {isOver && <div className="drop-indicator" />}
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`todo-card ${isDragging ? 'dragging' : ''} ${isOver ? 'drag-over' : ''}`}
+      >
       <div className="todo-drag-section">
         <div className="todo-actions">
           {todo.note ? (
@@ -583,5 +587,6 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
       </div>
       </div>
     </div>
+    </>
   );
 };

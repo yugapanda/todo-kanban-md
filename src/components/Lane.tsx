@@ -23,6 +23,8 @@ interface LaneProps {
   onAddLane?: (name: string, afterLaneId: string) => void;
   onArchiveDone?: () => void;
   isLastLane?: boolean;
+  overId?: string | null;
+  activeId?: string | null;
 }
 
 export const Lane: React.FC<LaneProps> = ({ 
@@ -38,14 +40,19 @@ export const Lane: React.FC<LaneProps> = ({
   onDeleteLane,
   onAddLane,
   onArchiveDone,
-  isLastLane = false
+  isLastLane = false,
+  overId,
+  activeId
 }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newTodoText, setNewTodoText] = useState('');
 
-  const { setNodeRef } = useDroppable({
+  const { setNodeRef, isOver } = useDroppable({
     id: lane.id,
   });
+
+  // Check if this lane is being hovered over during drag
+  const isLaneOver = isOver || overId === lane.id;
 
   const handleAddTodo = () => {
     if (newTodoText.trim()) {
@@ -66,7 +73,7 @@ export const Lane: React.FC<LaneProps> = ({
   };
 
   return (
-    <div className="lane" ref={setNodeRef}>
+    <div className={`lane ${isLaneOver && activeId ? 'lane-drag-over' : ''}`} ref={setNodeRef}>
       <div className="lane-header">
         <LaneManager
           laneName={lane.name}
@@ -125,7 +132,7 @@ export const Lane: React.FC<LaneProps> = ({
           items={lane.todos.map(t => t.id)}
           strategy={verticalListSortingStrategy}
         >
-          {lane.todos.map(todo => (
+          {lane.todos.map((todo, index) => (
             <TodoCard 
               key={todo.id} 
               todo={todo} 
@@ -135,6 +142,8 @@ export const Lane: React.FC<LaneProps> = ({
               onUpdateType={onUpdateType}
               onUpdateNote={onUpdateNote}
               onUpdateDeadline={onUpdateDeadline}
+              isOver={overId === todo.id}
+              index={index}
             />
           ))}
         </SortableContext>
