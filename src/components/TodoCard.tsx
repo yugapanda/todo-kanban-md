@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Todo } from '../types';
-import { Calendar, Clock, Tag, Package, CheckCircle, XCircle, Timer } from 'lucide-react';
+import { Calendar, Clock, Tag, Package, CheckCircle, XCircle, Timer, GripVertical } from 'lucide-react';
 import { format, parse } from 'date-fns';
 
 interface TodoCardProps {
   todo: Todo;
   isDragging?: boolean;
+  onUpdateTodo?: (todoId: string, newText: string) => void;
 }
 
 const getTagColor = (tag: string) => {
@@ -31,7 +32,10 @@ const getTagColor = (tag: string) => {
   return colors[Math.abs(hash) % colors.length];
 };
 
-export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging }) => {
+export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, onUpdateTodo }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(todo.text);
+  const inputRef = useRef<HTMLInputElement>(null);
   const {
     attributes,
     listeners,
@@ -45,6 +49,48 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging }) => {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging || isSortableDragging ? 0.5 : 1,
+  };
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    // Prevent dragging while editing
+    if (!isDragging && !isSortableDragging) {
+      e.stopPropagation();
+      setIsEditing(true);
+      setEditText(todo.text);
+    }
+  };
+
+  const handleSave = () => {
+    const trimmedText = editText.trim();
+    if (trimmedText && trimmedText !== todo.text && onUpdateTodo) {
+      onUpdateTodo(todo.id, trimmedText);
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditText(todo.text);
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      handleSave();
+    } else if (e.key === 'Escape') {
+      handleCancel();
+    }
+  };
+
+  const handleBlur = () => {
+    handleSave();
   };
 
   const formatDeadline = (deadline: string) => {
@@ -113,9 +159,11 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging }) => {
       ref={setNodeRef}
       style={style}
       className={`todo-card ${isDragging ? 'dragging' : ''}`}
-      {...attributes}
-      {...listeners}
     >
+      <div className="todo-drag-handle" {...attributes} {...listeners}>
+        <GripVertical size={16} />
+      </div>
+      <div className="todo-card-content">
       {/* Tags and Type at the top */}
       {(todo.tags.length > 0 || todo.type) && (
         <div className="todo-header-badges">
@@ -144,7 +192,22 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging }) => {
         </div>
       )}
 
-      <div className="todo-content">{todo.text}</div>
+      <div className="todo-content" onDoubleClick={handleDoubleClick}>
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            type="text"
+            className="todo-edit-input"
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={handleBlur}
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          todo.text
+        )}
+      </div>
 
       <div className="todo-metadata">
         {todo.deadline && (
@@ -180,6 +243,7 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging }) => {
             <span>{formatTimestamp(todo.rejectAt)}</span>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

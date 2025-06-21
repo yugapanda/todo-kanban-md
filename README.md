@@ -27,6 +27,7 @@ Todo Kanban MDは、マークダウンファイルに保存されたタスクを
 
 ### 2. Task Management / タスク管理
 - Create, edit, and delete tasks / タスクの作成、編集、削除
+- Double-click to edit task text directly / ダブルクリックでタスクテキストを直接編集
 - Rich metadata support / 豊富なメタデータサポート:
   - Deadlines / 期限: `@YYYYMMDD` (date/日付), `@@hh:mm` (time/時刻)
   - Tags / タグ: `#tagname`
@@ -43,8 +44,11 @@ Todo Kanban MDは、マークダウンファイルに保存されたタスクを
 ### 4. UI Features / UI機能
 - Color-coded tags / 色分けされたタグ
 - Visual indicators for deadlines and time spent / 期限と経過時間の視覚的インジケーター
+- Drag handle for easy task movement / ドラッグハンドルによる簡単なタスク移動
+- Hover tooltips for better user guidance / より良いユーザーガイダンスのためのホバーツールチップ
 - Responsive design / レスポンシブデザイン
 - Keyboard shortcuts support / キーボードショートカットサポート
+  - Cmd+Enter (Mac) or Ctrl+Enter (Windows/Linux) to save, Escape to cancel editing / Cmd+Enter（Mac）またはCtrl+Enter（Windows/Linux）で保存、Escapeで編集キャンセル
 
 ## Planned Features / 実装予定の機能
 

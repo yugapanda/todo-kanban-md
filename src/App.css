@@ -233,10 +233,10 @@ body {
   background: #f8f8f8;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
-  padding: 0.75rem;
   margin-bottom: 0.5rem;
-  cursor: grab;
   transition: all 0.2s;
+  display: flex;
+  overflow: hidden;
 }
 
 .todo-card:hover {
@@ -246,7 +246,31 @@ body {
 
 .todo-card.dragging {
   opacity: 0.5;
+}
+
+.todo-drag-handle {
+  background-color: #e8e8e8;
+  border-right: 1px solid #d0d0d0;
+  padding: 0.75rem 0.5rem;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  color: #999;
+  transition: background-color 0.2s ease;
+}
+
+.todo-drag-handle:hover {
+  background-color: #d8d8d8;
+  color: #666;
+}
+
+.todo-drag-handle:active {
   cursor: grabbing;
+}
+
+.todo-card-content {
+  flex: 1;
+  padding: 0.75rem;
 }
 
 .todo-header-badges {
@@ -290,6 +314,45 @@ body {
   color: #333;
   margin-bottom: 0.5rem;
   line-height: 1.4;
+  cursor: text;
+  transition: background-color 0.2s ease;
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin: -2px -4px 0.5rem -4px;
+  position: relative;
+}
+
+.todo-content:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.todo-content:hover::after {
+  content: "ダブルクリックで編集";
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  font-size: 0.7rem;
+  color: #666;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 6px;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.todo-edit-input {
+  width: 100%;
+  font-size: 0.875rem;
+  color: #333;
+  line-height: 1.4;
+  border: 1px solid #4CAF50;
+  border-radius: 4px;
+  padding: 4px 8px;
+  background-color: #fff;
+  outline: none;
+  font-family: inherit;
 }
 
 .todo-metadata {
