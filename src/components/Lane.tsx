@@ -1,0 +1,109 @@
+import React, { useState } from 'react';
+import { useDroppable } from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { TodoCard } from './TodoCard';
+import { LaneManager } from './LaneManager';
+import { Lane as LaneType } from '../types';
+import { Plus } from 'lucide-react';
+
+interface LaneProps {
+  lane: LaneType;
+  onAddTodo: (laneId: string, todoText: string) => void;
+  onRenameLane?: (laneId: string, newName: string) => void;
+  onDeleteLane?: (laneId: string) => void;
+  onAddLane?: (name: string, afterLaneId: string) => void;
+  isLastLane?: boolean;
+}
+
+export const Lane: React.FC<LaneProps> = ({ 
+  lane, 
+  onAddTodo,
+  onRenameLane,
+  onDeleteLane,
+  onAddLane,
+  isLastLane = false
+}) => {
+  const [isAdding, setIsAdding] = useState(false);
+  const [newTodoText, setNewTodoText] = useState('');
+
+  const { setNodeRef } = useDroppable({
+    id: lane.id,
+  });
+
+  const handleAddTodo = () => {
+    if (newTodoText.trim()) {
+      onAddTodo(lane.id, newTodoText.trim());
+      setNewTodoText('');
+      setIsAdding(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleAddTodo();
+    } else if (e.key === 'Escape') {
+      setNewTodoText('');
+      setIsAdding(false);
+    }
+  };
+
+  return (
+    <div className="lane" ref={setNodeRef}>
+      <div className="lane-header">
+        <LaneManager
+          laneName={lane.name}
+          isRestricted={lane.isRestricted}
+          onRename={(newName) => onRenameLane?.(lane.id, newName)}
+          onDelete={() => onDeleteLane?.(lane.id)}
+          onAddLane={(name) => onAddLane?.(name, lane.id)}
+          isLastLane={isLastLane}
+        />
+        <span className="todo-count">{lane.todos.length}</span>
+      </div>
+      <div className="lane-content">
+        <div className="add-todo-section">
+          {!isAdding ? (
+            <button
+              className="add-todo-btn"
+              onClick={() => setIsAdding(true)}
+            >
+              <Plus size={16} />
+            </button>
+          ) : (
+            <div className="add-todo-input-wrapper">
+              <input
+                type="text"
+                className="add-todo-input"
+                placeholder="新しいTodoを入力..."
+                value={newTodoText}
+                onChange={(e) => setNewTodoText(e.target.value)}
+                onKeyDown={handleKeyPress}
+                onBlur={() => {
+                  if (!newTodoText.trim()) {
+                    setIsAdding(false);
+                  }
+                }}
+                autoFocus
+              />
+              <div className="add-todo-actions">
+                <button onClick={handleAddTodo} className="add-btn">追加</button>
+                <button onClick={() => { setNewTodoText(''); setIsAdding(false); }} className="cancel-btn">キャンセル</button>
+              </div>
+            </div>
+          )}
+        </div>
+        <SortableContext
+          items={lane.todos.map(t => t.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {lane.todos.map(todo => (
+            <TodoCard key={todo.id} todo={todo} />
+          ))}
+        </SortableContext>
+      </div>
+    </div>
+  );
+};
