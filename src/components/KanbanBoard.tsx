@@ -385,6 +385,67 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
     await saveToFile(newData);
   };
 
+  // Handler for archiving done tasks
+  const handleArchiveDone = async () => {
+    const doneLane = data.lanes.find(lane => lane.name === 'Done');
+    if (!doneLane || doneLane.todos.length === 0) return;
+
+    try {
+      const userConfirmed = await confirm(
+        `Archive ${doneLane.todos.length} completed task${doneLane.todos.length > 1 ? 's' : ''}?`, 
+        {
+          title: 'Archive Done Tasks',
+          okLabel: 'Archive',
+          cancelLabel: 'Cancel'
+        }
+      );
+
+      if (!userConfirmed) return;
+
+      const timestamp = format(new Date(), 'yyyyMMddHHmm');
+      const archiveFileName = `ARCHIVE_${timestamp}.md`;
+      
+      // Create archive content
+      let archiveContent = `# Archive - ${format(new Date(), 'yyyy-MM-dd HH:mm')}\n\n`;
+      archiveContent += `## Done Tasks\n\n`;
+      
+      doneLane.todos.forEach(todo => {
+        archiveContent += `- [x] ${todo.text}`;
+        if (todo.tags && todo.tags.length > 0) {
+          archiveContent += ` [${todo.tags.join(', ')}]`;
+        }
+        if (todo.type) {
+          archiveContent += ` {${todo.type}}`;
+        }
+        if (todo.doneAt) {
+          archiveContent += ` (done: ${todo.doneAt})`;
+        }
+        archiveContent += '\n';
+      });
+
+      // Write archive file
+      await invoke('write_archive_file', { 
+        folderPath, 
+        fileName: archiveFileName,
+        content: archiveContent 
+      });
+
+      // Remove todos from Done lane
+      const newData: KanbanData = {
+        ...data,
+        lanes: updateLanes(data.lanes, doneLane.id, lane => ({
+          ...lane,
+          todos: []
+        }))
+      };
+
+      onDataChange(newData);
+      await saveToFile(newData);
+    } catch (error) {
+      console.error('Error archiving tasks:', error);
+    }
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const activeIdStr = active.id as string;
@@ -518,6 +579,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
             onRenameLane={handleRenameLane}
             onDeleteLane={handleDeleteLane}
             onAddLane={handleAddLane}
+            onArchiveDone={handleArchiveDone}
             isLastLane={index === data.lanes.length - 1}
           />
         ))}

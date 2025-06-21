@@ -214,6 +214,27 @@ body {
   margin-top: 0.5rem;
 }
 
+.lane-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.archive-btn {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  color: #666;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.archive-btn:hover {
+  background: #f0f0f0;
+  color: #27ae60;
+}
+
 .todo-count {
   background: #e0e0e0;
   color: #666;

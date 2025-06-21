@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Todo } from '../types';
-import { Calendar, Clock, Tag, Package, CheckCircle, XCircle, Timer, GripVertical, X, Plus, FileText, ExternalLink } from 'lucide-react';
+import { Calendar, Clock, Package, CheckCircle, XCircle, Timer, GripVertical, X, Plus, FileText, ExternalLink } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { invoke } from '@tauri-apps/api/core';
 

@@ -7,7 +7,7 @@ import {
 import { TodoCard } from './TodoCard';
 import { LaneManager } from './LaneManager';
 import { Lane as LaneType } from '../types';
-import { Plus } from 'lucide-react';
+import { Plus, Archive } from 'lucide-react';
 
 interface LaneProps {
   lane: LaneType;
@@ -20,6 +20,7 @@ interface LaneProps {
   onRenameLane?: (laneId: string, newName: string) => void;
   onDeleteLane?: (laneId: string) => void;
   onAddLane?: (name: string, afterLaneId: string) => void;
+  onArchiveDone?: () => void;
   isLastLane?: boolean;
 }
 
@@ -34,6 +35,7 @@ export const Lane: React.FC<LaneProps> = ({
   onRenameLane,
   onDeleteLane,
   onAddLane,
+  onArchiveDone,
   isLastLane = false
 }) => {
   const [isAdding, setIsAdding] = useState(false);
@@ -71,7 +73,18 @@ export const Lane: React.FC<LaneProps> = ({
           onAddLane={(name) => onAddLane?.(name, lane.id)}
           isLastLane={isLastLane}
         />
-        <span className="todo-count">{lane.todos.length}</span>
+        <div className="lane-header-actions">
+          {lane.name === 'Done' && onArchiveDone && (
+            <button
+              className="archive-btn"
+              onClick={onArchiveDone}
+              title="Archive all done tasks"
+            >
+              <Archive size={16} />
+            </button>
+          )}
+          <span className="todo-count">{lane.todos.length}</span>
+        </div>
       </div>
       <div className="lane-content">
         <div className="add-todo-section">
