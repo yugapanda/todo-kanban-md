@@ -3,6 +3,7 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher, Config};
 use std::sync::mpsc::channel;
 use std::time::Duration;
 use tauri::Emitter;
+use std::process::Command;
 
 #[derive(Default)]
 struct AppState {
@@ -115,6 +116,84 @@ fn stop_file_watcher(state: tauri::State<AppState>) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn create_note_file(folder_path: String, todo_text: String) -> Result<String, String> {
+    use std::fs;
+    use std::path::Path;
+    use chrono::Local;
+    
+    // Create notes directory if it doesn't exist
+    let notes_dir = Path::new(&folder_path).join("notes");
+    if !notes_dir.exists() {
+        fs::create_dir(&notes_dir).map_err(|e| e.to_string())?;
+    }
+    
+    // Sanitize todo text for filename
+    let safe_text = todo_text
+        .chars()
+        .filter(|c| c.is_alphanumeric() || c.is_whitespace() || *c == '-' || *c == '_')
+        .collect::<String>()
+        .trim()
+        .replace(' ', "_");
+    
+    // Create filename with date
+    let date_str = Local::now().format("%Y%m%d").to_string();
+    let filename = format!("{}_{}.md", safe_text, date_str);
+    let file_path = notes_dir.join(&filename);
+    
+    // Create the file with initial content if it doesn't exist
+    if !file_path.exists() {
+        let content = format!("# {}\n\nCreated: {}\n\n## Notes\n\n", 
+            todo_text, 
+            Local::now().format("%Y-%m-%d %H:%M:%S")
+        );
+        fs::write(&file_path, content).map_err(|e| e.to_string())?;
+    }
+    
+    // Return relative path from folder_path
+    Ok(format!("notes/{}", filename))
+}
+
+#[tauri::command]
+fn open_in_obsidian(folder_path: String, note_path: String) -> Result<(), String> {
+    use std::path::Path;
+    
+    let full_path = Path::new(&folder_path).join(&note_path);
+    let full_path_str = full_path.to_string_lossy();
+    
+    // Create Obsidian URI
+    let obsidian_uri = format!("obsidian://open?path={}", 
+        urlencoding::encode(&full_path_str)
+    );
+    
+    // Open the URI based on the platform
+    #[cfg(target_os = "macos")]
+    {
+        Command::new("open")
+            .arg(&obsidian_uri)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("cmd")
+            .args(&["/C", "start", "", &obsidian_uri])
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    
+    #[cfg(target_os = "linux")]
+    {
+        Command::new("xdg-open")
+            .arg(&obsidian_uri)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -128,7 +207,9 @@ pub fn run() {
             write_todo_file,
             read_automation_file,
             start_file_watcher,
-            stop_file_watcher
+            stop_file_watcher,
+            create_note_file,
+            open_in_obsidian
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

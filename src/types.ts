@@ -9,6 +9,7 @@ export interface Todo {
   rejectAt?: string; // !!YYYYMMDDhhmm
   tags: string[]; // #tag
   type?: string; // $type
+  note?: string; // note file path
   order: number;
 }
 

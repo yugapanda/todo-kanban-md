@@ -2,15 +2,18 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Todo } from '../types';
-import { Calendar, Clock, Tag, Package, CheckCircle, XCircle, Timer, GripVertical, X, Plus } from 'lucide-react';
+import { Calendar, Clock, Tag, Package, CheckCircle, XCircle, Timer, GripVertical, X, Plus, FileText, ExternalLink } from 'lucide-react';
 import { format, parse } from 'date-fns';
+import { invoke } from '@tauri-apps/api/core';
 
 interface TodoCardProps {
   todo: Todo;
   isDragging?: boolean;
+  folderPath?: string;
   onUpdateTodo?: (todoId: string, newText: string) => void;
   onUpdateTags?: (todoId: string, newTags: string[]) => void;
   onUpdateType?: (todoId: string, newType: string | undefined) => void;
+  onUpdateNote?: (todoId: string, notePath: string) => void;
 }
 
 const getTagColor = (tag: string) => {
@@ -34,7 +37,7 @@ const getTagColor = (tag: string) => {
   return colors[Math.abs(hash) % colors.length];
 };
 
-export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, onUpdateTodo, onUpdateTags, onUpdateType }) => {
+export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath, onUpdateTodo, onUpdateTags, onUpdateType, onUpdateNote }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(todo.text);
   const [isEditingTags, setIsEditingTags] = useState(false);
@@ -163,6 +166,33 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, onUpdateTo
     }
   };
 
+  const handleCreateNote = async () => {
+    if (!folderPath || !onUpdateNote) return;
+    
+    try {
+      const notePath = await invoke<string>('create_note_file', {
+        folderPath,
+        todoText: todo.text
+      });
+      onUpdateNote(todo.id, notePath);
+    } catch (error) {
+      console.error('Failed to create note:', error);
+    }
+  };
+
+  const handleOpenNote = async () => {
+    if (!folderPath || !todo.note) return;
+    
+    try {
+      await invoke('open_in_obsidian', {
+        folderPath,
+        notePath: todo.note
+      });
+    } catch (error) {
+      console.error('Failed to open note:', error);
+    }
+  };
+
   const formatDeadline = (deadline: string) => {
     try {
       const date = parse(deadline, 'yyyyMMdd', new Date());
@@ -230,8 +260,29 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, onUpdateTo
       style={style}
       className={`todo-card ${isDragging ? 'dragging' : ''}`}
     >
-      <div className="todo-drag-handle" {...attributes} {...listeners}>
-        <GripVertical size={16} />
+      <div className="todo-drag-section">
+        <div className="todo-actions">
+          {todo.note ? (
+            <button
+              className="note-link-btn"
+              onClick={handleOpenNote}
+              title="Open note in Obsidian"
+            >
+              <ExternalLink size={14} />
+            </button>
+          ) : (
+            <button
+              className="create-note-btn"
+              onClick={handleCreateNote}
+              title="Create note"
+            >
+              <FileText size={14} />
+            </button>
+          )}
+        </div>
+        <div className="todo-drag-handle" {...attributes} {...listeners}>
+          <GripVertical size={16} />
+        </div>
       </div>
       <div className="todo-card-content">
       {/* Tags and Type at the top */}

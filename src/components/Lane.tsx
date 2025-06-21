@@ -11,10 +11,12 @@ import { Plus } from 'lucide-react';
 
 interface LaneProps {
   lane: LaneType;
+  folderPath?: string;
   onAddTodo: (laneId: string, todoText: string) => void;
   onUpdateTodo?: (todoId: string, newText: string) => void;
   onUpdateTags?: (todoId: string, newTags: string[]) => void;
   onUpdateType?: (todoId: string, newType: string | undefined) => void;
+  onUpdateNote?: (todoId: string, notePath: string) => void;
   onRenameLane?: (laneId: string, newName: string) => void;
   onDeleteLane?: (laneId: string) => void;
   onAddLane?: (name: string, afterLaneId: string) => void;
@@ -23,10 +25,12 @@ interface LaneProps {
 
 export const Lane: React.FC<LaneProps> = ({ 
   lane, 
+  folderPath,
   onAddTodo,
   onUpdateTodo,
   onUpdateTags,
   onUpdateType,
+  onUpdateNote,
   onRenameLane,
   onDeleteLane,
   onAddLane,
@@ -106,7 +110,15 @@ export const Lane: React.FC<LaneProps> = ({
           strategy={verticalListSortingStrategy}
         >
           {lane.todos.map(todo => (
-            <TodoCard key={todo.id} todo={todo} onUpdateTodo={onUpdateTodo} onUpdateTags={onUpdateTags} onUpdateType={onUpdateType} />
+            <TodoCard 
+              key={todo.id} 
+              todo={todo} 
+              folderPath={folderPath}
+              onUpdateTodo={onUpdateTodo} 
+              onUpdateTags={onUpdateTags} 
+              onUpdateType={onUpdateType}
+              onUpdateNote={onUpdateNote}
+            />
           ))}
         </SortableContext>
       </div>

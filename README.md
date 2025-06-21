@@ -36,6 +36,11 @@ Todo Kanban MDは、マークダウンファイルに保存されたタスクを
   - Click "Add type" button to set task type / 「Add type」ボタンをクリックしてタスクタイプを設定
   - Double-click existing type to edit / 既存のタイプをダブルクリックして編集
   - Click X to remove type / Xをクリックしてタイプを削除
+- Note integration with Obsidian / Obsidianとのノート連携:
+  - Click note button to create a note file / ノートボタンをクリックしてノートファイルを作成
+  - Note files are saved in `notes/` directory / ノートファイルは`notes/`ディレクトリに保存
+  - File naming pattern: `{TaskName}_{Date}.md` / ファイル名パターン：`{タスク名}_{日付}.md`
+  - Click link button to open note in Obsidian / リンクボタンをクリックしてObsidianでノートを開く
 - Rich metadata support / 豊富なメタデータサポート:
   - Deadlines / 期限: `@YYYYMMDD` (date/日付), `@@hh:mm` (time/時刻)
   - Tags / タグ: `#tagname`

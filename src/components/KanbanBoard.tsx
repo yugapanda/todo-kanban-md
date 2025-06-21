@@ -362,6 +362,29 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
     await saveToFile(newData);
   };
 
+  // Handler for updating todo note
+  const handleUpdateNote = async (todoId: string, notePath: string) => {
+    // Find the lane containing the todo
+    const laneWithTodo = data.lanes.find(lane =>
+      lane.todos.some(todo => todo.id === todoId)
+    );
+    
+    if (!laneWithTodo) return;
+
+    const newData: KanbanData = {
+      ...data,
+      lanes: updateLanes(data.lanes, laneWithTodo.id, lane => ({
+        ...lane,
+        todos: lane.todos.map(todo =>
+          todo.id === todoId ? { ...todo, note: notePath } : todo
+        )
+      }))
+    };
+
+    onDataChange(newData);
+    await saveToFile(newData);
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const activeIdStr = active.id as string;
@@ -486,10 +509,12 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
           <Lane
             key={lane.id}
             lane={lane}
+            folderPath={folderPath}
             onAddTodo={handleAddTodo}
             onUpdateTodo={handleUpdateTodo}
             onUpdateTags={handleUpdateTags}
             onUpdateType={handleUpdateType}
+            onUpdateNote={handleUpdateNote}
             onRenameLane={handleRenameLane}
             onDeleteLane={handleDeleteLane}
             onAddLane={handleAddLane}
@@ -500,7 +525,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
 
       <DragOverlay>
         {activeId && activeTodo ? (
-          <TodoCard todo={activeTodo} isDragging />
+          <TodoCard todo={activeTodo} isDragging folderPath={folderPath} />
         ) : null}
       </DragOverlay>
     </DndContext>
