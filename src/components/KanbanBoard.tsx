@@ -316,6 +316,52 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
     await saveToFile(newData);
   };
 
+  // Handler for updating todo tags
+  const handleUpdateTags = async (todoId: string, newTags: string[]) => {
+    // Find the lane containing the todo
+    const laneWithTodo = data.lanes.find(lane =>
+      lane.todos.some(todo => todo.id === todoId)
+    );
+    
+    if (!laneWithTodo) return;
+
+    const newData: KanbanData = {
+      ...data,
+      lanes: updateLanes(data.lanes, laneWithTodo.id, lane => ({
+        ...lane,
+        todos: lane.todos.map(todo =>
+          todo.id === todoId ? { ...todo, tags: newTags } : todo
+        )
+      }))
+    };
+
+    onDataChange(newData);
+    await saveToFile(newData);
+  };
+
+  // Handler for updating todo type
+  const handleUpdateType = async (todoId: string, newType: string | undefined) => {
+    // Find the lane containing the todo
+    const laneWithTodo = data.lanes.find(lane =>
+      lane.todos.some(todo => todo.id === todoId)
+    );
+    
+    if (!laneWithTodo) return;
+
+    const newData: KanbanData = {
+      ...data,
+      lanes: updateLanes(data.lanes, laneWithTodo.id, lane => ({
+        ...lane,
+        todos: lane.todos.map(todo =>
+          todo.id === todoId ? { ...todo, type: newType } : todo
+        )
+      }))
+    };
+
+    onDataChange(newData);
+    await saveToFile(newData);
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const activeIdStr = active.id as string;
@@ -442,6 +488,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
             lane={lane}
             onAddTodo={handleAddTodo}
             onUpdateTodo={handleUpdateTodo}
+            onUpdateTags={handleUpdateTags}
+            onUpdateType={handleUpdateType}
             onRenameLane={handleRenameLane}
             onDeleteLane={handleDeleteLane}
             onAddLane={handleAddLane}

@@ -2,13 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Todo } from '../types';
-import { Calendar, Clock, Tag, Package, CheckCircle, XCircle, Timer, GripVertical } from 'lucide-react';
+import { Calendar, Clock, Tag, Package, CheckCircle, XCircle, Timer, GripVertical, X, Plus } from 'lucide-react';
 import { format, parse } from 'date-fns';
 
 interface TodoCardProps {
   todo: Todo;
   isDragging?: boolean;
   onUpdateTodo?: (todoId: string, newText: string) => void;
+  onUpdateTags?: (todoId: string, newTags: string[]) => void;
+  onUpdateType?: (todoId: string, newType: string | undefined) => void;
 }
 
 const getTagColor = (tag: string) => {
@@ -32,10 +34,16 @@ const getTagColor = (tag: string) => {
   return colors[Math.abs(hash) % colors.length];
 };
 
-export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, onUpdateTodo }) => {
+export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, onUpdateTodo, onUpdateTags, onUpdateType }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(todo.text);
+  const [isEditingTags, setIsEditingTags] = useState(false);
+  const [newTag, setNewTag] = useState('');
+  const [isEditingType, setIsEditingType] = useState(false);
+  const [newType, setNewType] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const tagInputRef = useRef<HTMLInputElement>(null);
+  const typeInputRef = useRef<HTMLInputElement>(null);
   const {
     attributes,
     listeners,
@@ -57,6 +65,19 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, onUpdateTo
       inputRef.current.select();
     }
   }, [isEditing]);
+
+  useEffect(() => {
+    if (isEditingTags && tagInputRef.current) {
+      tagInputRef.current.focus();
+    }
+  }, [isEditingTags]);
+
+  useEffect(() => {
+    if (isEditingType && typeInputRef.current) {
+      typeInputRef.current.focus();
+      typeInputRef.current.select();
+    }
+  }, [isEditingType]);
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     // Prevent dragging while editing
@@ -91,6 +112,55 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, onUpdateTo
 
   const handleBlur = () => {
     handleSave();
+  };
+
+  const handleAddTag = () => {
+    const trimmedTag = newTag.trim();
+    if (trimmedTag && !todo.tags.includes(trimmedTag) && onUpdateTags) {
+      onUpdateTags(todo.id, [...todo.tags, trimmedTag]);
+      setNewTag('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    if (onUpdateTags) {
+      onUpdateTags(todo.id, todo.tags.filter(tag => tag !== tagToRemove));
+    }
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddTag();
+    } else if (e.key === 'Escape') {
+      setIsEditingTags(false);
+      setNewTag('');
+    }
+  };
+
+  const handleSaveType = () => {
+    const trimmedType = newType.trim();
+    if (onUpdateType) {
+      onUpdateType(todo.id, trimmedType || undefined);
+    }
+    setIsEditingType(false);
+  };
+
+  const handleRemoveType = () => {
+    if (onUpdateType) {
+      onUpdateType(todo.id, undefined);
+    }
+    setIsEditingType(false);
+  };
+
+  const handleTypeKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveType();
+    } else if (e.key === 'Escape') {
+      setNewType(todo.type || '');
+      setIsEditingType(false);
+    }
   };
 
   const formatDeadline = (deadline: string) => {
@@ -165,32 +235,123 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, onUpdateTo
       </div>
       <div className="todo-card-content">
       {/* Tags and Type at the top */}
-      {(todo.tags.length > 0 || todo.type) && (
-        <div className="todo-header-badges">
-          {todo.type && (
-            <span className="todo-type-badge">
+      <div className="todo-header-badges">
+        {isEditingType ? (
+          <div className="type-input-wrapper">
+            <input
+              ref={typeInputRef}
+              type="text"
+              className="type-input"
+              placeholder="Type name..."
+              value={newType}
+              onChange={(e) => setNewType(e.target.value)}
+              onKeyDown={handleTypeKeyDown}
+              onBlur={handleSaveType}
+            />
+            <button
+              type="button"
+              className="type-remove-btn"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleRemoveType();
+              }}
+              title="Remove type"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        ) : (
+          todo.type ? (
+            <span 
+              className="todo-type-badge"
+              onDoubleClick={() => {
+                setIsEditingType(true);
+                setNewType(todo.type || '');
+              }}
+              title="Double-click to edit"
+            >
               <Package size={12} />
               {todo.type}
             </span>
-          )}
-          {todo.tags.map((tag, index) => {
-            const color = getTagColor(tag);
-            return (
-              <span
-                key={index}
-                className="todo-tag-badge"
-                style={{
-                  backgroundColor: color.bg,
-                  color: color.text,
-                  borderColor: color.border
-                }}
-              >
-                #{tag}
-              </span>
-            );
-          })}
-        </div>
-      )}
+          ) : (
+            <button
+              className="add-type-btn"
+              onClick={() => {
+                setIsEditingType(true);
+                setNewType('');
+              }}
+              title="Add type"
+            >
+              <Package size={12} />
+              Add type
+            </button>
+          )
+        )}
+        {todo.tags.map((tag, index) => {
+          const color = getTagColor(tag);
+          return (
+            <span
+              key={index}
+              className="todo-tag-badge"
+              style={{
+                backgroundColor: color.bg,
+                color: color.text,
+                borderColor: color.border
+              }}
+            >
+              #{tag}
+              {isEditingTags && (
+                <button
+                  type="button"
+                  className="tag-remove-btn"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleRemoveTag(tag);
+                  }}
+                  title="Remove tag"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </span>
+          );
+        })}
+        {isEditingTags ? (
+          <div className="tag-input-wrapper">
+            <input
+              ref={tagInputRef}
+              type="text"
+              className="tag-input"
+              placeholder="New tag..."
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              onKeyDown={handleTagKeyDown}
+              onBlur={(e) => {
+                // Check if the blur is moving to a tag remove button
+                const relatedTarget = e.relatedTarget as HTMLElement;
+                if (relatedTarget && relatedTarget.classList.contains('tag-remove-btn')) {
+                  return;
+                }
+                
+                if (!newTag.trim()) {
+                  setTimeout(() => setIsEditingTags(false), 200);
+                }
+              }}
+            />
+          </div>
+        ) : (
+          <button
+            className="add-tag-btn"
+            onClick={() => setIsEditingTags(true)}
+            title="Add tag"
+          >
+            <Plus size={12} />
+            Add tag
+          </button>
+        )}
+      </div>
 
       <div className="todo-content" onDoubleClick={handleDoubleClick}>
         {isEditing ? (

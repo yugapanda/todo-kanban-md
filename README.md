@@ -28,6 +28,14 @@ Todo Kanban MDは、マークダウンファイルに保存されたタスクを
 ### 2. Task Management / タスク管理
 - Create, edit, and delete tasks / タスクの作成、編集、削除
 - Double-click to edit task text directly / ダブルクリックでタスクテキストを直接編集
+- Interactive tag management / インタラクティブなタグ管理:
+  - Click "Add tag" button to add new tags / 「Add tag」ボタンをクリックして新しいタグを追加
+  - Click X on tags to remove them / タグのXをクリックして削除
+  - Tags are color-coded for easy identification / タグは識別しやすいように色分け表示
+- Type management / タイプ管理:
+  - Click "Add type" button to set task type / 「Add type」ボタンをクリックしてタスクタイプを設定
+  - Double-click existing type to edit / 既存のタイプをダブルクリックして編集
+  - Click X to remove type / Xをクリックしてタイプを削除
 - Rich metadata support / 豊富なメタデータサポート:
   - Deadlines / 期限: `@YYYYMMDD` (date/日付), `@@hh:mm` (time/時刻)
   - Tags / タグ: `#tagname`

@@ -13,6 +13,8 @@ interface LaneProps {
   lane: LaneType;
   onAddTodo: (laneId: string, todoText: string) => void;
   onUpdateTodo?: (todoId: string, newText: string) => void;
+  onUpdateTags?: (todoId: string, newTags: string[]) => void;
+  onUpdateType?: (todoId: string, newType: string | undefined) => void;
   onRenameLane?: (laneId: string, newName: string) => void;
   onDeleteLane?: (laneId: string) => void;
   onAddLane?: (name: string, afterLaneId: string) => void;
@@ -23,6 +25,8 @@ export const Lane: React.FC<LaneProps> = ({
   lane, 
   onAddTodo,
   onUpdateTodo,
+  onUpdateTags,
+  onUpdateType,
   onRenameLane,
   onDeleteLane,
   onAddLane,
@@ -102,7 +106,7 @@ export const Lane: React.FC<LaneProps> = ({
           strategy={verticalListSortingStrategy}
         >
           {lane.todos.map(todo => (
-            <TodoCard key={todo.id} todo={todo} onUpdateTodo={onUpdateTodo} />
+            <TodoCard key={todo.id} todo={todo} onUpdateTodo={onUpdateTodo} onUpdateTags={onUpdateTags} onUpdateType={onUpdateType} />
           ))}
         </SortableContext>
       </div>

@@ -278,6 +278,7 @@ body {
   flex-wrap: wrap;
   gap: 0.25rem;
   margin-bottom: 0.5rem;
+  align-items: center;
 }
 
 .todo-type-badge {
@@ -291,6 +292,12 @@ body {
   font-size: 0.75rem;
   font-weight: 500;
   border: 1px solid #bbdefb;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.todo-type-badge:hover {
+  background-color: #d1e7fd;
 }
 
 .todo-type-badge svg {
@@ -307,6 +314,123 @@ body {
   font-size: 0.75rem;
   font-weight: 500;
   border: 1px solid #e1bee7;
+  gap: 0.25rem;
+  position: relative;
+}
+
+.tag-remove-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  margin-left: 0.125rem;
+}
+
+.tag-remove-btn:hover {
+  opacity: 1;
+}
+
+.add-tag-btn {
+  background-color: #f0f0f0;
+  border: 1px dashed #999;
+  color: #666;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.add-tag-btn:hover {
+  background-color: #e8e8e8;
+  border-color: #666;
+  color: #333;
+}
+
+.tag-input-wrapper {
+  display: inline-flex;
+  align-items: center;
+}
+
+.tag-input {
+  background-color: #fff;
+  border: 1px solid #4CAF50;
+  color: #333;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  width: 100px;
+  outline: none;
+  font-family: inherit;
+}
+
+.add-type-btn {
+  background-color: #e8f0fe;
+  border: 1px dashed #1976d2;
+  color: #1976d2;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.add-type-btn:hover {
+  background-color: #d1e3fc;
+  border-color: #1565c0;
+}
+
+.type-input-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #e3f2fd;
+  border: 1px solid #1976d2;
+  border-radius: 12px;
+  padding: 0.125rem 0.5rem;
+}
+
+.type-input {
+  background: none;
+  border: none;
+  color: #1976d2;
+  font-size: 0.75rem;
+  font-weight: 500;
+  width: 80px;
+  outline: none;
+  font-family: inherit;
+}
+
+.type-remove-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1976d2;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.type-remove-btn:hover {
+  opacity: 1;
 }
 
 .todo-content {
