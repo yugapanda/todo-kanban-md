@@ -14,6 +14,8 @@ import {
 import {
   arrayMove,
   sortableKeyboardCoordinates,
+  SortableContext,
+  horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { Lane } from './Lane';
 import { TodoCard } from './TodoCard';
@@ -22,6 +24,7 @@ import { generateMarkdown } from '../utils/markdownParser';
 import { invoke } from '@tauri-apps/api/core';
 import { format } from 'date-fns';
 import { confirm } from '@tauri-apps/plugin-dialog';
+import { GripVertical } from 'lucide-react';
 
 interface KanbanBoardProps {
   data: KanbanData;
@@ -189,6 +192,7 @@ const pipe = <T,>(...fns: Array<(arg: T) => T>): ((arg: T) => T) =>
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDataChange }) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeTodo, setActiveTodo] = useState<Todo | null>(null);
+  const [activeLane, setActiveLane] = useState<KanbanData['lanes'][0] | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
 
   // Collect all existing tags and types for autocomplete
@@ -497,7 +501,16 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
     const activeIdStr = active.id as string;
 
     setActiveId(activeIdStr);
-    setActiveTodo(findTodoById(data.lanes, activeIdStr) || null);
+    
+    // Check if dragging a lane or a todo
+    const draggedLane = data.lanes.find(lane => lane.id === activeIdStr);
+    if (draggedLane) {
+      setActiveLane(draggedLane);
+      setActiveTodo(null);
+    } else {
+      setActiveTodo(findTodoById(data.lanes, activeIdStr) || null);
+      setActiveLane(null);
+    }
   };
 
   const handleDragOver = (event: DragOverEvent) => {
@@ -513,16 +526,49 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
     if (!over) {
       setActiveId(null);
       setActiveTodo(null);
+      setActiveLane(null);
       return;
     }
 
     const activeId = active.id as string;
     const overId = over.id as string;
 
+    // Check if we're dragging a lane
+    const draggingLane = data.lanes.find(lane => lane.id === activeId);
+    if (draggingLane) {
+      // Handle lane reordering
+      if (activeId !== overId) {
+        const oldIndex = data.lanes.findIndex(lane => lane.id === activeId);
+        const newIndex = data.lanes.findIndex(lane => lane.id === overId);
+        
+        const newLanes = arrayMove(data.lanes, oldIndex, newIndex);
+        
+        // Update order for all lanes
+        const reorderedLanes = newLanes.map((lane, index) => ({
+          ...lane,
+          order: index
+        }));
+
+        const newData: KanbanData = {
+          ...data,
+          lanes: reorderedLanes
+        };
+
+        onDataChange(newData);
+        await saveToFile(newData);
+      }
+      
+      setActiveId(null);
+      setActiveLane(null);
+      return;
+    }
+
+    // Otherwise, handle todo drag
     const activeLane = findLaneByTodoId(data.lanes, activeId);
     if (!activeLane) {
       setActiveId(null);
       setActiveTodo(null);
+      setActiveLane(null);
       return;
     }
 
@@ -530,6 +576,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
     if (!todoToMove) {
       setActiveId(null);
       setActiveTodo(null);
+      setActiveLane(null);
       return;
     }
 
@@ -609,6 +656,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
 
     setActiveId(null);
     setActiveTodo(null);
+    setActiveLane(null);
   };
 
   return (
@@ -620,33 +668,52 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
       onDragEnd={handleDragEnd}
     >
       <div className="kanban-board">
-        {data.lanes.map((lane, index) => (
-          <Lane
-            key={lane.id}
-            lane={lane}
-            folderPath={folderPath}
-            onAddTodo={handleAddTodo}
-            onUpdateTodo={handleUpdateTodo}
-            onUpdateTags={handleUpdateTags}
-            onUpdateType={handleUpdateType}
-            onUpdateNote={handleUpdateNote}
-            onUpdateDeadline={handleUpdateDeadline}
-            onRenameLane={handleRenameLane}
-            onDeleteLane={handleDeleteLane}
-            onAddLane={handleAddLane}
-            onArchiveDone={handleArchiveDone}
-            isLastLane={index === data.lanes.length - 1}
-            overId={overId}
-            activeId={activeId}
-            allTags={allTags}
-            allTypes={allTypes}
-          />
-        ))}
+        <SortableContext
+          items={data.lanes.map(lane => lane.id)}
+          strategy={horizontalListSortingStrategy}
+        >
+          {data.lanes.map((lane, index) => (
+            <Lane
+              key={lane.id}
+              lane={lane}
+              folderPath={folderPath}
+              onAddTodo={handleAddTodo}
+              onUpdateTodo={handleUpdateTodo}
+              onUpdateTags={handleUpdateTags}
+              onUpdateType={handleUpdateType}
+              onUpdateNote={handleUpdateNote}
+              onUpdateDeadline={handleUpdateDeadline}
+              onRenameLane={handleRenameLane}
+              onDeleteLane={handleDeleteLane}
+              onAddLane={handleAddLane}
+              onArchiveDone={handleArchiveDone}
+              isLastLane={index === data.lanes.length - 1}
+              overId={overId}
+              activeId={activeId}
+              allTags={allTags}
+              allTypes={allTypes}
+            />
+          ))}
+        </SortableContext>
       </div>
 
       <DragOverlay>
-        {activeId && activeTodo ? (
-          <TodoCard todo={activeTodo} isDragging folderPath={folderPath} />
+        {activeId ? (
+          activeTodo ? (
+            <TodoCard todo={activeTodo} isDragging folderPath={folderPath} />
+          ) : activeLane ? (
+            <div className="lane lane-dragging" style={{ width: '300px' }}>
+              <div className="lane-header">
+                <div className="lane-drag-handle">
+                  <GripVertical size={16} />
+                </div>
+                <h3>{activeLane.name}</h3>
+                <div className="lane-header-actions">
+                  <span className="todo-count">{activeLane.todos.length}</span>
+                </div>
+              </div>
+            </div>
+          ) : null
         ) : null}
       </DragOverlay>
     </DndContext>

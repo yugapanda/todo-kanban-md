@@ -3,11 +3,13 @@ import { useDroppable } from '@dnd-kit/core';
 import {
   SortableContext,
   verticalListSortingStrategy,
+  useSortable,
 } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { TodoCard } from './TodoCard';
 import { LaneManager } from './LaneManager';
 import { Lane as LaneType } from '../types';
-import { Plus, Archive } from 'lucide-react';
+import { Plus, Archive, GripVertical } from 'lucide-react';
 
 interface LaneProps {
   lane: LaneType;
@@ -51,9 +53,42 @@ export const Lane: React.FC<LaneProps> = ({
   const [isAdding, setIsAdding] = useState(false);
   const [newTodoText, setNewTodoText] = useState('');
 
-  const { setNodeRef, isOver } = useDroppable({
+  // Use sortable for lane drag functionality
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setSortableNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ 
     id: lane.id,
+    data: {
+      type: 'lane',
+      lane: lane
+    }
   });
+
+  // Use droppable for todo drop functionality
+  const { setNodeRef: setDroppableNodeRef, isOver } = useDroppable({
+    id: lane.id,
+    data: {
+      type: 'lane',
+      lane: lane
+    }
+  });
+
+  // Combine both refs
+  const setNodeRef = (node: HTMLElement | null) => {
+    setSortableNodeRef(node);
+    setDroppableNodeRef(node);
+  };
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   // Check if this lane is being hovered over during drag
   const isLaneOver = isOver || overId === lane.id;
@@ -77,8 +112,15 @@ export const Lane: React.FC<LaneProps> = ({
   };
 
   return (
-    <div className={`lane ${isLaneOver && activeId ? 'lane-drag-over' : ''}`} ref={setNodeRef}>
+    <div 
+      className={`lane ${isLaneOver && activeId ? 'lane-drag-over' : ''} ${isDragging ? 'lane-dragging' : ''}`} 
+      ref={setNodeRef}
+      style={style}
+    >
       <div className="lane-header">
+        <div className="lane-drag-handle" {...attributes} {...listeners}>
+          <GripVertical size={16} />
+        </div>
         <LaneManager
           laneName={lane.name}
           isRestricted={lane.isRestricted}
