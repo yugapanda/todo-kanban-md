@@ -139,6 +139,21 @@ const updateTodoHistory = (todo: Todo, fromLane: string, toLane: string): Todo =
   return todo;
 };
 
+// Pure function to check if todo needs follow-up
+const needsFollowUp = (todo: Todo): boolean => {
+  return todo.tags.some(tag => tag.toLowerCase() === 'ask' || tag.toLowerCase() === 'request');
+};
+
+// Pure function to create follow-up todo
+const createFollowUpTodo = (originalTodo: Todo, todoLaneId: string, order: number): Todo => ({
+  id: generateId(),
+  text: originalTodo.text,
+  laneId: todoLaneId,
+  tags: ['follow'],
+  doingPendingHistory: [],
+  order
+});
+
 // Pure functions for finding entities
 const findLaneById = (lanes: KanbanData['lanes'], laneId: string) =>
   lanes.find(lane => lane.id === laneId);
@@ -594,12 +609,23 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
         (todo: Todo) => ({ ...todo, laneId: overLane.id })
       )(todoToMove);
 
+      let lanes = updateMultipleLanes(data.lanes, [
+        { laneId: activeLane.id, updater: lane => removeTodoFromLane(lane, activeId) },
+        { laneId: overLane.id, updater: lane => addTodoToLane(lane, updatedTodo) }
+      ]);
+
+      // Check if we need to create a follow-up todo
+      if (overLane.name === 'Done' && needsFollowUp(todoToMove)) {
+        const todoLane = lanes.find(lane => lane.name === 'Todo');
+        if (todoLane) {
+          const followUpTodo = createFollowUpTodo(todoToMove, todoLane.id, todoLane.todos.length);
+          lanes = updateLanes(lanes, todoLane.id, lane => addTodoToLane(lane, followUpTodo));
+        }
+      }
+
       const newData: KanbanData = {
         ...data,
-        lanes: updateMultipleLanes(data.lanes, [
-          { laneId: activeLane.id, updater: lane => removeTodoFromLane(lane, activeId) },
-          { laneId: overLane.id, updater: lane => addTodoToLane(lane, updatedTodo) }
-        ])
+        lanes
       };
 
       onDataChange(newData);
@@ -640,12 +666,23 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
 
           const overIndex = overTodoLane.todos.findIndex(t => t.id === overId);
 
+          let lanes = updateMultipleLanes(data.lanes, [
+            { laneId: activeLane.id, updater: lane => removeTodoFromLane(lane, activeId) },
+            { laneId: overTodoLane.id, updater: lane => insertTodoAtIndex(lane, updatedTodo, overIndex) }
+          ]);
+
+          // Check if we need to create a follow-up todo
+          if (overTodoLane.name === 'Done' && needsFollowUp(todoToMove)) {
+            const todoLane = lanes.find(lane => lane.name === 'Todo');
+            if (todoLane) {
+              const followUpTodo = createFollowUpTodo(todoToMove, todoLane.id, todoLane.todos.length);
+              lanes = updateLanes(lanes, todoLane.id, lane => addTodoToLane(lane, followUpTodo));
+            }
+          }
+
           const newData: KanbanData = {
             ...data,
-            lanes: updateMultipleLanes(data.lanes, [
-              { laneId: activeLane.id, updater: lane => removeTodoFromLane(lane, activeId) },
-              { laneId: overTodoLane.id, updater: lane => insertTodoAtIndex(lane, updatedTodo, overIndex) }
-            ])
+            lanes
           };
 
           onDataChange(newData);

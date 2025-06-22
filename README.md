@@ -25,7 +25,9 @@ Todo Kanban MDは、マークダウンファイルに保存されたタスクを
 - Multiple lanes with drag-and-drop support / ドラッグ＆ドロップ対応の複数レーン
 - System lanes: IceBox, Todo, Doing, Pending, Done, Reject, Archive / システムレーン：IceBox、Todo、Doing、Pending、Done、Reject、Archive
 - Custom lane creation, renaming, and deletion / カスタムレーンの作成、名前変更、削除
+- **Lane reordering** / **レーンの並び替え**: Drag lanes by their handles to reorder / ハンドルをドラッグしてレーンを並び替え
 - Business logic for task movement between lanes / レーン間のタスク移動のビジネスロジック
+- **Archive functionality** / **アーカイブ機能**: Archive button on Done lane to move all completed tasks to timestamped archive files / Doneレーンのアーカイブボタンで完了タスクをタイムスタンプ付きアーカイブファイルに移動
 
 ### 2. Task Management / タスク管理
 - Create, edit, and delete tasks / タスクの作成、編集、削除
@@ -34,10 +36,19 @@ Todo Kanban MDは、マークダウンファイルに保存されたタスクを
   - Click "Add tag" button to add new tags / 「Add tag」ボタンをクリックして新しいタグを追加
   - Click X on tags to remove them / タグのXをクリックして削除
   - Tags are color-coded for easy identification / タグは識別しやすいように色分け表示
+  - **Tag/Type autocomplete** / **タグ・タイプのオートコンプリート**: Suggests existing tags and types while typing / 入力中に既存のタグやタイプを提案
 - Type management / タイプ管理:
   - Click "Add type" button to set task type / 「Add type」ボタンをクリックしてタスクタイプを設定
   - Double-click existing type to edit / 既存のタイプをダブルクリックして編集
   - Click X to remove type / Xをクリックしてタイプを削除
+- **Deadline management** / **期限管理**:
+  - Click on deadline to open calendar picker / 期限をクリックしてカレンダーピッカーを開く
+  - Visual indicators for deadline status / 期限ステータスの視覚的インジケーター:
+    - Red: Overdue / 赤：期限切れ
+    - Orange: Due today / オレンジ：本日期限
+    - Blue: Due within 3 days / 青：3日以内
+    - Gray: Future deadline / グレー：将来の期限
+  - Time selection support / 時刻選択サポート
 - Note integration with Obsidian / Obsidianとのノート連携:
   - Click note button to create a note file / ノートボタンをクリックしてノートファイルを作成
   - Note files are saved in `notes/` directory / ノートファイルは`notes/`ディレクトリに保存
@@ -50,6 +61,7 @@ Todo Kanban MDは、マークダウンファイルに保存されたタスクを
   - Time tracking / 時間追跡: `[(start,end)]`
   - Status / ステータス: `!timestamp` (done/完了), `!!timestamp` (rejected/却下)
 - Automatic time tracking when moving between Doing/Pending / Doing/Pending間移動時の自動時間追跡
+- **Automatic follow-up task creation** / **自動フォローアップタスク作成**: When tasks with "ask" or "request" tags are moved to Done, a follow-up task is automatically created in Todo lane / "ask"または"request"タグがついたタスクがDoneに移動されると、Todoレーンに自動的にフォローアップタスクが作成されます
 
 ### 3. File Integration / ファイル連携
 - Read/write markdown files / マークダウンファイルの読み書き
@@ -60,9 +72,11 @@ Todo Kanban MDは、マークダウンファイルに保存されたタスクを
 - Color-coded tags / 色分けされたタグ
 - Visual indicators for deadlines and time spent / 期限と経過時間の視覚的インジケーター
 - Drag handle for easy task movement / ドラッグハンドルによる簡単なタスク移動
+- **Visual drag feedback** / **視覚的なドラッグフィードバック**: Drop indicators show where tasks will be placed / ドロップインジケーターがタスクの配置位置を表示
 - Hover tooltips for better user guidance / より良いユーザーガイダンスのためのホバーツールチップ
 - Responsive design / レスポンシブデザイン
 - Keyboard shortcuts support / キーボードショートカットサポート
+  - **Cmd+Enter (Mac) or Ctrl+Enter (Windows/Linux) to create new todos** / **Cmd+Enter（Mac）またはCtrl+Enter（Windows/Linux）で新しいTodoを作成**
   - Cmd+Enter (Mac) or Ctrl+Enter (Windows/Linux) to save, Escape to cancel editing / Cmd+Enter（Mac）またはCtrl+Enter（Windows/Linux）で保存、Escapeで編集キャンセル
 
 ## Planned Features / 実装予定の機能
