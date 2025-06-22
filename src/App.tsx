@@ -3,9 +3,10 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import { KanbanBoard } from "./components/KanbanBoard";
+import { Analytics } from "./components/Analytics";
 import { KanbanData } from "./types";
 import { parseMarkdown } from "./utils/markdownParser";
-import { FolderOpen } from "lucide-react";
+import { FolderOpen, BarChart3 } from "lucide-react";
 import "./App.css";
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
   const [kanbanData, setKanbanData] = useState<KanbanData | null>(null);
   const [loading, setLoading] = useState(false);
   const [isInternalChange, setIsInternalChange] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   useEffect(() => {
     // Auto-load from current directory on startup
@@ -160,6 +162,9 @@ function App() {
         <h1>Todo Kanban</h1>
         <div className="header-info">
           <span>{folderPath}</span>
+          <button onClick={() => setShowAnalytics(!showAnalytics)} className="analytics-btn" title="分析を表示">
+            <BarChart3 size={16} />
+          </button>
           <button onClick={selectAndLoadFolder} className="folder-btn">
             <FolderOpen size={16} />
           </button>
@@ -167,11 +172,15 @@ function App() {
       </header>
 
       <main className="app-main">
-        <KanbanBoard
-          data={kanbanData}
-          folderPath={folderPath}
-          onDataChange={handleDataChange}
-        />
+        {showAnalytics ? (
+          <Analytics data={kanbanData} onClose={() => setShowAnalytics(false)} />
+        ) : (
+          <KanbanBoard
+            data={kanbanData}
+            folderPath={folderPath}
+            onDataChange={handleDataChange}
+          />
+        )}
       </main>
     </div>
   );
