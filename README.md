@@ -28,6 +28,9 @@ Todo Kanban MDは、マークダウンファイルに保存されたタスクを
 - **Lane reordering** / **レーンの並び替え**: Drag lanes by their handles to reorder / ハンドルをドラッグしてレーンを並び替え
 - Business logic for task movement between lanes / レーン間のタスク移動のビジネスロジック
 - **Archive functionality** / **アーカイブ機能**: Archive button on Done lane to move all completed tasks to timestamped archive files / Doneレーンのアーカイブボタンで完了タスクをタイムスタンプ付きアーカイブファイルに移動
+- **WIP Limit** / **WIP制限**: Toggle to limit Doing lane to one task at a time / Doingレーンを一度に1つのタスクに制限するトグル
+  - When enabled, moving a second task to Doing automatically moves the existing task to Pending / 有効時、2つ目のタスクをDoingに移動すると既存のタスクが自動的にPendingに移動
+  - Helps maintain focus and reduce context switching / フォーカスを維持し、コンテキストスイッチングを減らすのに役立つ
 
 ### 2. Task Management / タスク管理
 - Create, edit, and delete tasks / タスクの作成、編集、削除

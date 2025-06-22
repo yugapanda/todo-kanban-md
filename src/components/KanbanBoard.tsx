@@ -30,6 +30,7 @@ interface KanbanBoardProps {
   data: KanbanData;
   folderPath: string;
   onDataChange: (data: KanbanData) => void;
+  wipLimitEnabled?: boolean;
 }
 
 // Pure functions for ID generation
@@ -154,6 +155,36 @@ const createFollowUpTodo = (originalTodo: Todo, todoLaneId: string, order: numbe
   order
 });
 
+// Helper function to handle WIP limit
+const enforceWipLimit = (lanes: KanbanData['lanes'], movingTodoId: string): KanbanData['lanes'] => {
+  const doingLane = lanes.find(lane => lane.name === 'Doing');
+  const pendingLane = lanes.find(lane => lane.name === 'Pending');
+  
+  if (!doingLane || !pendingLane) return lanes;
+  
+  // Find existing todos in Doing (excluding the one being moved)
+  const existingDoingTodos = doingLane.todos.filter(todo => todo.id !== movingTodoId);
+  
+  if (existingDoingTodos.length === 0) return lanes;
+  
+  // Move the first existing todo to Pending
+  const todoToMove = existingDoingTodos[0];
+  const now = format(new Date(), 'yyyyMMddHHmm');
+  
+  // Update the todo's history
+  const updatedTodo = {
+    ...todoToMove,
+    laneId: pendingLane.id,
+    doingPendingHistory: updateLastHistoryEntry(todoToMove.doingPendingHistory, now)
+  };
+  
+  // Update lanes
+  return updateMultipleLanes(lanes, [
+    { laneId: doingLane.id, updater: lane => removeTodoFromLane(lane, todoToMove.id) },
+    { laneId: pendingLane.id, updater: lane => addTodoToLane(lane, updatedTodo) }
+  ]);
+};
+
 // Pure functions for finding entities
 const findLaneById = (lanes: KanbanData['lanes'], laneId: string) =>
   lanes.find(lane => lane.id === laneId);
@@ -204,7 +235,7 @@ const updateMultipleLanes = (
 const pipe = <T,>(...fns: Array<(arg: T) => T>): ((arg: T) => T) =>
   (arg: T) => fns.reduce((acc, fn) => fn(acc), arg);
 
-export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDataChange }) => {
+export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDataChange, wipLimitEnabled = false }) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeTodo, setActiveTodo] = useState<Todo | null>(null);
   const [activeLane, setActiveLane] = useState<KanbanData['lanes'][0] | null>(null);
@@ -623,6 +654,11 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
         }
       }
 
+      // Apply WIP limit if enabled and moving to Doing
+      if (wipLimitEnabled && overLane.name === 'Doing') {
+        lanes = enforceWipLimit(lanes, activeId);
+      }
+
       const newData: KanbanData = {
         ...data,
         lanes
@@ -678,6 +714,11 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
               const followUpTodo = createFollowUpTodo(todoToMove, todoLane.id, todoLane.todos.length);
               lanes = updateLanes(lanes, todoLane.id, lane => addTodoToLane(lane, followUpTodo));
             }
+          }
+
+          // Apply WIP limit if enabled and moving to Doing
+          if (wipLimitEnabled && overTodoLane.name === 'Doing') {
+            lanes = enforceWipLimit(lanes, activeId);
           }
 
           const newData: KanbanData = {

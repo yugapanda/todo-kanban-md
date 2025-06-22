@@ -47,6 +47,65 @@ body {
   color: #333;
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.wip-limit-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-label input[type="checkbox"] {
+  display: none;
+}
+
+.toggle-switch {
+  width: 40px;
+  height: 20px;
+  background: #ddd;
+  border-radius: 10px;
+  position: relative;
+  transition: background-color 0.3s;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-label input[type="checkbox"]:checked + .toggle-switch {
+  background: #3498db;
+}
+
+.toggle-label input[type="checkbox"]:checked + .toggle-switch::after {
+  transform: translateX(20px);
+}
+
+.toggle-text {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 500;
+}
+
 .header-info {
   display: flex;
   align-items: center;
@@ -1200,6 +1259,18 @@ body {
   .folder-btn:hover {
     background: #333;
     border-color: #777;
+  }
+  
+  .toggle-switch {
+    background: #555;
+  }
+  
+  .toggle-label input[type="checkbox"]:checked + .toggle-switch {
+    background: #42a5f5;
+  }
+  
+  .toggle-text {
+    color: #aaa;
   }
   
   .lane {

@@ -15,6 +15,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [isInternalChange, setIsInternalChange] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [wipLimitEnabled, setWipLimitEnabled] = useState(false);
 
   useEffect(() => {
     // Auto-load from current directory on startup
@@ -160,14 +161,27 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>Todo Kanban</h1>
-        <div className="header-info">
-          <span>{folderPath}</span>
-          <button onClick={() => setShowAnalytics(!showAnalytics)} className="analytics-btn" title="分析を表示">
-            <BarChart3 size={16} />
-          </button>
-          <button onClick={selectAndLoadFolder} className="folder-btn">
-            <FolderOpen size={16} />
-          </button>
+        <div className="header-controls">
+          <div className="wip-limit-toggle">
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={wipLimitEnabled}
+                onChange={(e) => setWipLimitEnabled(e.target.checked)}
+              />
+              <span className="toggle-switch"></span>
+              <span className="toggle-text">WIP Limit</span>
+            </label>
+          </div>
+          <div className="header-info">
+            <span>{folderPath}</span>
+            <button onClick={() => setShowAnalytics(!showAnalytics)} className="analytics-btn" title="分析を表示">
+              <BarChart3 size={16} />
+            </button>
+            <button onClick={selectAndLoadFolder} className="folder-btn">
+              <FolderOpen size={16} />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -179,6 +193,7 @@ function App() {
             data={kanbanData}
             folderPath={folderPath}
             onDataChange={handleDataChange}
+            wipLimitEnabled={wipLimitEnabled}
           />
         )}
       </main>
