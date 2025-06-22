@@ -79,6 +79,21 @@ Todo Kanban MDは、マークダウンファイルに保存されたタスクを
   - **Cmd+Enter (Mac) or Ctrl+Enter (Windows/Linux) to create new todos** / **Cmd+Enter（Mac）またはCtrl+Enter（Windows/Linux）で新しいTodoを作成**
   - Cmd+Enter (Mac) or Ctrl+Enter (Windows/Linux) to save, Escape to cancel editing / Cmd+Enter（Mac）またはCtrl+Enter（Windows/Linux）で保存、Escapeで編集キャンセル
 
+### 5. Analytics / 分析機能
+- **Monthly time tracking analytics** / **月別時間追跡分析**: View time spent on different task types / 異なるタスクタイプに費やした時間を表示
+  - Click the bar chart icon in the header to open analytics / ヘッダーの棒グラフアイコンをクリックして分析を開く
+  - Navigate between months with arrow buttons / 矢印ボタンで月間を移動
+- **Stacked bar chart** / **積み上げ棒グラフ**: Daily breakdown of time by task type / タスクタイプ別の日次時間内訳
+  - Shows time distribution across each day of the month / 月の各日における時間配分を表示
+  - Color-coded by task type / タスクタイプ別に色分け
+- **Pie chart** / **円グラフ**: Percentage distribution of time by task type / タスクタイプ別の時間割合
+  - Visual representation of where time is spent / 時間がどこに費やされているかの視覚的表現
+  - Shows both hours and percentages / 時間とパーセンテージの両方を表示
+- **Automatic time calculation** / **自動時間計算**:
+  - Tracks time from Doing/Pending history / Doing/Pending履歴から時間を追跡
+  - Includes currently active tasks (still in Doing) / 現在アクティブなタスク（Doing中）も含む
+  - Groups tasks without type as "その他" (Other) / タイプのないタスクは「その他」としてグループ化
+
 ## Planned Features / 実装予定の機能
 
 ### Near-term / 短期的
