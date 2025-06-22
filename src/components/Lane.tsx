@@ -25,6 +25,8 @@ interface LaneProps {
   isLastLane?: boolean;
   overId?: string | null;
   activeId?: string | null;
+  allTags?: string[];
+  allTypes?: string[];
 }
 
 export const Lane: React.FC<LaneProps> = ({ 
@@ -42,7 +44,9 @@ export const Lane: React.FC<LaneProps> = ({
   onArchiveDone,
   isLastLane = false,
   overId,
-  activeId
+  activeId,
+  allTags = [],
+  allTypes = []
 }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newTodoText, setNewTodoText] = useState('');
@@ -144,6 +148,8 @@ export const Lane: React.FC<LaneProps> = ({
               onUpdateDeadline={onUpdateDeadline}
               isOver={overId === todo.id}
               index={index}
+              allTags={allTags}
+              allTypes={allTypes}
             />
           ))}
         </SortableContext>

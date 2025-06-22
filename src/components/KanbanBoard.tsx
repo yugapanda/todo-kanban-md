@@ -191,6 +191,27 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
   const [activeTodo, setActiveTodo] = useState<Todo | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
 
+  // Collect all existing tags and types for autocomplete
+  const allTags = React.useMemo(() => {
+    const tagsSet = new Set<string>();
+    data.lanes.forEach(lane => {
+      lane.todos.forEach(todo => {
+        todo.tags.forEach(tag => tagsSet.add(tag));
+      });
+    });
+    return Array.from(tagsSet).sort();
+  }, [data]);
+
+  const allTypes = React.useMemo(() => {
+    const typesSet = new Set<string>();
+    data.lanes.forEach(lane => {
+      lane.todos.forEach(todo => {
+        if (todo.type) typesSet.add(todo.type);
+      });
+    });
+    return Array.from(typesSet).sort();
+  }, [data]);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -617,6 +638,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
             isLastLane={index === data.lanes.length - 1}
             overId={overId}
             activeId={activeId}
+            allTags={allTags}
+            allTypes={allTypes}
           />
         ))}
       </div>

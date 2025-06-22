@@ -21,6 +21,8 @@ interface TodoCardProps {
   onUpdateDeadline?: (todoId: string, deadline: string | undefined, deadlineTime: string | undefined) => void;
   isOver?: boolean;
   index?: number;
+  allTags?: string[];
+  allTypes?: string[];
 }
 
 const getTagColor = (tag: string) => {
@@ -44,13 +46,17 @@ const getTagColor = (tag: string) => {
   return colors[Math.abs(hash) % colors.length];
 };
 
-export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath, onUpdateTodo, onUpdateTags, onUpdateType, onUpdateNote, onUpdateDeadline, isOver }) => {
+export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath, onUpdateTodo, onUpdateTags, onUpdateType, onUpdateNote, onUpdateDeadline, isOver, allTags = [], allTypes = [] }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(todo.text);
   const [isEditingTags, setIsEditingTags] = useState(false);
   const [newTag, setNewTag] = useState('');
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+  const [selectedTagIndex, setSelectedTagIndex] = useState(-1);
   const [isEditingType, setIsEditingType] = useState(false);
   const [newType, setNewType] = useState('');
+  const [typeSuggestions, setTypeSuggestions] = useState<string[]>([]);
+  const [selectedTypeIndex, setSelectedTypeIndex] = useState(-1);
   const [isEditingDeadline, setIsEditingDeadline] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(
     todo.deadline ? parse(todo.deadline, 'yyyyMMdd', new Date()) : null
@@ -95,6 +101,37 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
       typeInputRef.current.select();
     }
   }, [isEditingType]);
+
+  // Update tag suggestions when typing
+  useEffect(() => {
+    if (newTag && isEditingTags) {
+      const filtered = allTags
+        .filter(tag => 
+          tag.toLowerCase().includes(newTag.toLowerCase()) &&
+          !todo.tags.includes(tag)
+        )
+        .slice(0, 5);
+      setTagSuggestions(filtered);
+      setSelectedTagIndex(-1);
+    } else {
+      setTagSuggestions([]);
+    }
+  }, [newTag, allTags, todo.tags, isEditingTags]);
+
+  // Update type suggestions when typing
+  useEffect(() => {
+    if (newType && isEditingType) {
+      const filtered = allTypes
+        .filter(type => 
+          type.toLowerCase().includes(newType.toLowerCase())
+        )
+        .slice(0, 5);
+      setTypeSuggestions(filtered);
+      setSelectedTypeIndex(-1);
+    } else {
+      setTypeSuggestions([]);
+    }
+  }, [newType, allTypes, isEditingType]);
 
 
   const handleDoubleClick = (e: React.MouseEvent) => {
@@ -149,10 +186,31 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
   const handleTagKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleAddTag();
+      if (selectedTagIndex >= 0 && tagSuggestions[selectedTagIndex]) {
+        const selectedTag = tagSuggestions[selectedTagIndex];
+        if (onUpdateTags) {
+          onUpdateTags(todo.id, [...todo.tags, selectedTag]);
+          setNewTag('');
+        }
+      } else {
+        handleAddTag();
+      }
     } else if (e.key === 'Escape') {
       setIsEditingTags(false);
       setNewTag('');
+      setTagSuggestions([]);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedTagIndex(prev => 
+        prev < tagSuggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedTagIndex(prev => prev > 0 ? prev - 1 : -1);
+    } else if (e.key === 'Tab' && tagSuggestions.length > 0) {
+      e.preventDefault();
+      const suggestion = tagSuggestions[selectedTagIndex >= 0 ? selectedTagIndex : 0];
+      setNewTag(suggestion);
     }
   };
 
@@ -174,10 +232,32 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
   const handleTypeKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleSaveType();
+      if (selectedTypeIndex >= 0 && typeSuggestions[selectedTypeIndex]) {
+        const selectedType = typeSuggestions[selectedTypeIndex];
+        if (onUpdateType) {
+          onUpdateType(todo.id, selectedType);
+          setIsEditingType(false);
+          setNewType('');
+        }
+      } else {
+        handleSaveType();
+      }
     } else if (e.key === 'Escape') {
       setNewType(todo.type || '');
       setIsEditingType(false);
+      setTypeSuggestions([]);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedTypeIndex(prev => 
+        prev < typeSuggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedTypeIndex(prev => prev > 0 ? prev - 1 : -1);
+    } else if (e.key === 'Tab' && typeSuggestions.length > 0) {
+      e.preventDefault();
+      const suggestion = typeSuggestions[selectedTypeIndex >= 0 ? selectedTypeIndex : 0];
+      setNewType(suggestion);
     }
   };
 
@@ -368,7 +448,16 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
               value={newType}
               onChange={(e) => setNewType(e.target.value)}
               onKeyDown={handleTypeKeyDown}
-              onBlur={handleSaveType}
+              onBlur={(e) => {
+                const relatedTarget = e.relatedTarget as HTMLElement;
+                if (relatedTarget && relatedTarget.classList.contains('suggestion-item')) {
+                  return;
+                }
+                setTimeout(() => {
+                  handleSaveType();
+                  setTypeSuggestions([]);
+                }, 200);
+              }}
             />
             <button
               type="button"
@@ -382,6 +471,28 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
             >
               <X size={12} />
             </button>
+            {typeSuggestions.length > 0 && (
+              <div className="autocomplete-dropdown type-dropdown">
+                {typeSuggestions.map((suggestion, index) => (
+                  <div
+                    key={suggestion}
+                    className={`suggestion-item ${index === selectedTypeIndex ? 'selected' : ''}`}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      if (onUpdateType) {
+                        onUpdateType(todo.id, suggestion);
+                        setIsEditingType(false);
+                        setNewType('');
+                      }
+                    }}
+                    onMouseEnter={() => setSelectedTypeIndex(index)}
+                  >
+                    <Package size={12} />
+                    {suggestion}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           todo.type ? (
@@ -451,17 +562,40 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
               onChange={(e) => setNewTag(e.target.value)}
               onKeyDown={handleTagKeyDown}
               onBlur={(e) => {
-                // Check if the blur is moving to a tag remove button
+                // Check if the blur is moving to a tag remove button or suggestion
                 const relatedTarget = e.relatedTarget as HTMLElement;
-                if (relatedTarget && relatedTarget.classList.contains('tag-remove-btn')) {
+                if (relatedTarget && (relatedTarget.classList.contains('tag-remove-btn') || relatedTarget.classList.contains('suggestion-item'))) {
                   return;
                 }
                 
                 if (!newTag.trim()) {
-                  setTimeout(() => setIsEditingTags(false), 200);
+                  setTimeout(() => {
+                    setIsEditingTags(false);
+                    setTagSuggestions([]);
+                  }, 200);
                 }
               }}
             />
+            {tagSuggestions.length > 0 && (
+              <div className="autocomplete-dropdown">
+                {tagSuggestions.map((suggestion, index) => (
+                  <div
+                    key={suggestion}
+                    className={`suggestion-item ${index === selectedTagIndex ? 'selected' : ''}`}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      if (onUpdateTags) {
+                        onUpdateTags(todo.id, [...todo.tags, suggestion]);
+                        setNewTag('');
+                      }
+                    }}
+                    onMouseEnter={() => setSelectedTagIndex(index)}
+                  >
+                    #{suggestion}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <button
