@@ -1,4 +1,6 @@
-# Todo Kanban MD / Todo カンバン MD
+# Todo Kanban MD / Todo カンバン Markdown
+
+![alt text](<image/CleanShot 2025-06-22 at 09.17.34.png>)
 
 A desktop Kanban board application that uses markdown files for storage, built with Tauri, React, and TypeScript.
 
