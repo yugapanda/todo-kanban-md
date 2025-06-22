@@ -38,6 +38,7 @@ const generateColor = (type: string): string => {
 
 export const Analytics: React.FC<AnalyticsProps> = ({ data, onClose }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [viewMode, setViewMode] = useState<'type' | 'tag'>('type');
 
   // Calculate time spent by type for the current month
   const { timeByType, dailyData, totalHours } = useMemo(() => {
@@ -119,6 +120,97 @@ export const Analytics: React.FC<AnalyticsProps> = ({ data, onClose }) => {
     return { timeByType, dailyData, totalHours };
   }, [data, currentMonth]);
 
+  // Calculate time spent by tag for the current month
+  const { timeByTag, dailyTagData, totalTagHours } = useMemo(() => {
+    const startDate = startOfMonth(currentMonth);
+    const endDate = endOfMonth(currentMonth);
+    const tagMap = new Map<string, number>();
+    const dailyMap = new Map<string, Map<string, number>>();
+
+    // Process all todos
+    data.lanes.forEach(lane => {
+      lane.todos.forEach(todo => {
+        if (todo.doingPendingHistory.length === 0) return;
+
+        todo.doingPendingHistory.forEach(entry => {
+          if (!entry.doing) return;
+
+          try {
+            const startTime = parse(entry.doing, 'yyyyMMddHHmm', new Date());
+            const endTime = entry.pending 
+              ? parse(entry.pending, 'yyyyMMddHHmm', new Date())
+              : new Date();
+
+            // Check if this entry is within the current month
+            if (isWithinInterval(startTime, { start: startDate, end: endDate }) ||
+              isWithinInterval(endTime, { start: startDate, end: endDate })) {
+
+              const minutes = Math.floor((endTime.getTime() - startTime.getTime()) / (1000 * 60));
+
+              // If the todo has no tags, use "タグなし" (No tag)
+              if (todo.tags.length === 0) {
+                tagMap.set('タグなし', (tagMap.get('タグなし') || 0) + minutes);
+                
+                const dayKey = format(startTime, 'yyyy-MM-dd');
+                if (!dailyMap.has(dayKey)) {
+                  dailyMap.set(dayKey, new Map());
+                }
+                const dayTags = dailyMap.get(dayKey)!;
+                dayTags.set('タグなし', (dayTags.get('タグなし') || 0) + minutes);
+              } else {
+                // Distribute time evenly among all tags
+                const minutesPerTag = minutes / todo.tags.length;
+                
+                todo.tags.forEach(tag => {
+                  tagMap.set(tag, (tagMap.get(tag) || 0) + minutesPerTag);
+                  
+                  const dayKey = format(startTime, 'yyyy-MM-dd');
+                  if (!dailyMap.has(dayKey)) {
+                    dailyMap.set(dayKey, new Map());
+                  }
+                  const dayTags = dailyMap.get(dayKey)!;
+                  dayTags.set(tag, (dayTags.get(tag) || 0) + minutesPerTag);
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Error parsing time entry:', error);
+          }
+        });
+      });
+    });
+
+    // Convert to array format for charts
+    const timeByTag: TimeData[] = Array.from(tagMap.entries())
+      .map(([type, minutes]) => ({
+        type,
+        minutes,
+        hours: Math.round((minutes / 60) * 100) / 100
+      }))
+      .sort((a, b) => b.minutes - a.minutes);
+
+    // Create daily data for stacked bar chart
+    const dailyTagData: MonthlyData[] = [];
+    const daysInMonth = endDate.getDate();
+    const allTags = new Set(timeByTag.map(t => t.type));
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayKey = format(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day), 'yyyy-MM-dd');
+      const dayData: MonthlyData = { day: day.toString() };
+
+      const dayTags = dailyMap.get(dayKey);
+      allTags.forEach(tag => {
+        dayData[tag] = dayTags ? Math.round((dayTags.get(tag) || 0) / 60 * 100) / 100 : 0;
+      });
+
+      dailyTagData.push(dayData);
+    }
+
+    const totalTagHours = timeByTag.reduce((sum, item) => sum + item.hours, 0);
+
+    return { timeByTag, dailyTagData, totalTagHours };
+  }, [data, currentMonth]);
+
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentMonth(prev => {
       const newDate = new Date(prev);
@@ -131,11 +223,21 @@ export const Analytics: React.FC<AnalyticsProps> = ({ data, onClose }) => {
     });
   };
 
-  const pieData = timeByType.map(item => ({
-    name: item.type,
-    value: item.hours,
-    percentage: totalHours > 0 ? Math.round((item.hours / totalHours) * 100) : 0
-  }));
+  const pieData = viewMode === 'type' 
+    ? timeByType.map(item => ({
+        name: item.type,
+        value: item.hours,
+        percentage: totalHours > 0 ? Math.round((item.hours / totalHours) * 100) : 0
+      }))
+    : timeByTag.map(item => ({
+        name: item.type,
+        value: item.hours,
+        percentage: totalTagHours > 0 ? Math.round((item.hours / totalTagHours) * 100) : 0
+      }));
+
+  const currentData = viewMode === 'type' ? dailyData : dailyTagData;
+  const currentTimeData = viewMode === 'type' ? timeByType : timeByTag;
+  const currentTotalHours = viewMode === 'type' ? totalHours : totalTagHours;
 
   return (
     <div className="analytics-container">
@@ -152,13 +254,27 @@ export const Analytics: React.FC<AnalyticsProps> = ({ data, onClose }) => {
             <ChevronRight size={20} />
           </button>
         </div>
+        <div className="view-mode-toggle">
+          <button 
+            className={`view-mode-btn ${viewMode === 'type' ? 'active' : ''}`}
+            onClick={() => setViewMode('type')}
+          >
+            タイプ別
+          </button>
+          <button 
+            className={`view-mode-btn ${viewMode === 'tag' ? 'active' : ''}`}
+            onClick={() => setViewMode('tag')}
+          >
+            タグ別
+          </button>
+        </div>
         <div className="total-hours">
-          合計: {totalHours.toFixed(1)}時間
+          合計: {currentTotalHours.toFixed(1)}時間
         </div>
       </div>
 
       <div className="analytics-content">
-        {timeByType.length === 0 ? (
+        {currentTimeData.length === 0 ? (
           <div className="no-data">
             <p>この月のデータはありません</p>
           </div>
@@ -167,16 +283,16 @@ export const Analytics: React.FC<AnalyticsProps> = ({ data, onClose }) => {
             <div className="chart-section">
               <h3>
                 <BarChart3 size={20} />
-                日別タスクタイプ時間（積み上げ）
+                日別{viewMode === 'type' ? 'タスクタイプ' : 'タグ'}時間（積み上げ）
               </h3>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={dailyData}>
+                <BarChart data={currentData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="day" />
                   <YAxis label={{ value: '時間', angle: -90, position: 'insideLeft' }} />
                   <Tooltip formatter={(value: number) => `${value}時間`} />
                   <Legend />
-                  {timeByType.map(({ type }) => (
+                  {currentTimeData.map(({ type }) => (
                     <Bar
                       key={type}
                       dataKey={type}
@@ -191,7 +307,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ data, onClose }) => {
             <div className="chart-section">
               <h3>
                 <PieChartIcon size={20} />
-                タスクタイプ別時間配分
+                {viewMode === 'type' ? 'タスクタイプ' : 'タグ'}別時間配分
               </h3>
               <div className="pie-chart-container">
                 <ResponsiveContainer width="50%" height={300}>
