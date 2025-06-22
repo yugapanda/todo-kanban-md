@@ -6,7 +6,8 @@
       "Bash(cargo:*)",
       "Bash(npm run dev:*)",
       "Bash(pkill:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm run typecheck:*)"
     ],
     "deny": []
   }

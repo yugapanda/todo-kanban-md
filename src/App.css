@@ -169,6 +169,7 @@ body {
   right: -40px;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 100;
 }
 
 .add-lane-btn {
@@ -191,17 +192,25 @@ body {
   transform: scale(1.1);
 }
 
-.add-lane-input-wrapper {
-  position: absolute;
+.add-lane-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
   right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.add-lane-input-wrapper {
+  position: fixed;
   background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  min-width: 220px;
 }
 
 .add-lane-input {
@@ -1118,6 +1127,10 @@ body {
   
   .add-lane-btn:hover {
     background: #3498db;
+  }
+  
+  .add-lane-backdrop {
+    background: rgba(0, 0, 0, 0.5);
   }
   
   .add-lane-input-wrapper {

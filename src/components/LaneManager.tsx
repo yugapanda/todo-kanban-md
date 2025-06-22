@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { Plus, X, Edit2, Check } from 'lucide-react';
 import { RESTRICTED_LANES } from '../types';
 
@@ -23,6 +24,8 @@ export const LaneManager: React.FC<LaneManagerProps> = ({
   const [editName, setEditName] = useState(laneName);
   const [isAddingLane, setIsAddingLane] = useState(false);
   const [newLaneName, setNewLaneName] = useState('');
+  const [dialogPosition, setDialogPosition] = useState({ top: 0, left: 0 });
+  const addButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleRename = () => {
     if (editName.trim() && editName !== laneName) {
@@ -52,6 +55,16 @@ export const LaneManager: React.FC<LaneManagerProps> = ({
       setIsAddingLane(false);
     }
   };
+
+  useEffect(() => {
+    if (isAddingLane && addButtonRef.current) {
+      const rect = addButtonRef.current.getBoundingClientRect();
+      setDialogPosition({
+        top: rect.top - 60, // Position above the button
+        left: rect.left - 200 // Position to the left of the button
+      });
+    }
+  }, [isAddingLane]);
 
   return (
     <div className="lane-manager">
@@ -110,42 +123,59 @@ export const LaneManager: React.FC<LaneManagerProps> = ({
         <div className="add-lane-section">
           {!isAddingLane ? (
             <button
+              ref={addButtonRef}
               className="add-lane-btn"
               onClick={() => setIsAddingLane(true)}
               title="Add new lane"
             >
               <Plus size={16} />
             </button>
-          ) : (
-            <div className="add-lane-input-wrapper">
-              <input
-                type="text"
-                className="add-lane-input"
-                placeholder="New lane name..."
-                value={newLaneName}
-                onChange={(e) => setNewLaneName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleAddLane();
-                  if (e.key === 'Escape') {
-                    setNewLaneName('');
-                    setIsAddingLane(false);
-                  }
+          ) : ReactDOM.createPortal(
+            <>
+              <div 
+                className="add-lane-backdrop"
+                onClick={() => {
+                  setNewLaneName('');
+                  setIsAddingLane(false);
                 }}
-                autoFocus
               />
-              <div className="add-lane-actions">
-                <button onClick={handleAddLane} className="add-btn">Add</button>
-                <button
-                  onClick={() => {
-                    setNewLaneName('');
-                    setIsAddingLane(false);
+              <div 
+                className="add-lane-input-wrapper"
+                style={{
+                  top: `${dialogPosition.top}px`,
+                  left: `${dialogPosition.left}px`
+                }}
+              >
+                <input
+                  type="text"
+                  className="add-lane-input"
+                  placeholder="New lane name..."
+                  value={newLaneName}
+                  onChange={(e) => setNewLaneName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleAddLane();
+                    if (e.key === 'Escape') {
+                      setNewLaneName('');
+                      setIsAddingLane(false);
+                    }
                   }}
-                  className="cancel-btn"
-                >
-                  Cancel
-                </button>
+                  autoFocus
+                />
+                <div className="add-lane-actions">
+                  <button onClick={handleAddLane} className="add-btn">Add</button>
+                  <button
+                    onClick={() => {
+                      setNewLaneName('');
+                      setIsAddingLane(false);
+                    }}
+                    className="cancel-btn"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-            </div>
+            </>,
+            document.body
           )}
         </div>
       )}
