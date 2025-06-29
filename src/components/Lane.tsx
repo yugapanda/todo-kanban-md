@@ -31,8 +31,8 @@ interface LaneProps {
   allTypes?: string[];
 }
 
-export const Lane: React.FC<LaneProps> = ({ 
-  lane, 
+export const Lane: React.FC<LaneProps> = ({
+  lane,
   folderPath,
   onAddTodo,
   onUpdateTodo,
@@ -61,7 +61,7 @@ export const Lane: React.FC<LaneProps> = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ 
+  } = useSortable({
     id: lane.id,
     data: {
       type: 'lane',
@@ -112,8 +112,8 @@ export const Lane: React.FC<LaneProps> = ({
   };
 
   return (
-    <div 
-      className={`lane ${isLaneOver && activeId ? 'lane-drag-over' : ''} ${isDragging ? 'lane-dragging' : ''}`} 
+    <div
+      className={`lane ${isLaneOver && activeId ? 'lane-drag-over' : ''} ${isDragging ? 'lane-dragging' : ''}`}
       ref={setNodeRef}
       style={style}
     >
@@ -179,12 +179,12 @@ export const Lane: React.FC<LaneProps> = ({
           strategy={verticalListSortingStrategy}
         >
           {lane.todos.map((todo, index) => (
-            <TodoCard 
-              key={todo.id} 
-              todo={todo} 
+            <TodoCard
+              key={todo.id}
+              todo={todo}
               folderPath={folderPath}
-              onUpdateTodo={onUpdateTodo} 
-              onUpdateTags={onUpdateTags} 
+              onUpdateTodo={onUpdateTodo}
+              onUpdateTags={onUpdateTags}
               onUpdateType={onUpdateType}
               onUpdateNote={onUpdateNote}
               onUpdateDeadline={onUpdateDeadline}

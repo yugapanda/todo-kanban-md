@@ -106,7 +106,7 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
   useEffect(() => {
     if (newTag && isEditingTags) {
       const filtered = allTags
-        .filter(tag => 
+        .filter(tag =>
           tag.toLowerCase().includes(newTag.toLowerCase()) &&
           !todo.tags.includes(tag)
         )
@@ -122,7 +122,7 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
   useEffect(() => {
     if (newType && isEditingType) {
       const filtered = allTypes
-        .filter(type => 
+        .filter(type =>
           type.toLowerCase().includes(newType.toLowerCase())
         )
         .slice(0, 5);
@@ -201,7 +201,7 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
       setTagSuggestions([]);
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedTagIndex(prev => 
+      setSelectedTagIndex(prev =>
         prev < tagSuggestions.length - 1 ? prev + 1 : prev
       );
     } else if (e.key === 'ArrowUp') {
@@ -248,7 +248,7 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
       setTypeSuggestions([]);
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedTypeIndex(prev => 
+      setSelectedTypeIndex(prev =>
         prev < typeSuggestions.length - 1 ? prev + 1 : prev
       );
     } else if (e.key === 'ArrowUp') {
@@ -263,7 +263,7 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
 
   const handleCreateNote = async () => {
     if (!folderPath || !onUpdateNote) return;
-    
+
     try {
       const notePath = await invoke<string>('create_note_file', {
         folderPath,
@@ -277,7 +277,7 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
 
   const handleOpenNote = async () => {
     if (!folderPath || !todo.note) return;
-    
+
     try {
       await invoke('open_in_obsidian', {
         folderPath,
@@ -322,13 +322,13 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
 
   const getDeadlineStatus = () => {
     if (!todo.deadline) return null;
-    
+
     try {
       const deadlineDate = parse(todo.deadline, 'yyyyMMdd', new Date());
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       deadlineDate.setHours(0, 0, 0, 0);
-      
+
       if (isBefore(deadlineDate, today)) {
         return 'overdue';
       } else if (isToday(deadlineDate)) {
@@ -411,316 +411,316 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
         style={style}
         className={`todo-card ${isDragging ? 'dragging' : ''} ${isOver ? 'drag-over' : ''}`}
       >
-      <div className="todo-drag-section">
-        <div className="todo-actions">
-          {todo.note ? (
-            <button
-              className="note-link-btn"
-              onClick={handleOpenNote}
-              title="Open note in Obsidian"
-            >
-              <ExternalLink size={14} />
-            </button>
-          ) : (
-            <button
-              className="create-note-btn"
-              onClick={handleCreateNote}
-              title="Create note"
-            >
-              <FileText size={14} />
-            </button>
-          )}
-        </div>
-        <div className="todo-drag-handle" {...attributes} {...listeners}>
-          <GripVertical size={16} />
-        </div>
-      </div>
-      <div className="todo-card-content">
-      {/* Tags and Type at the top */}
-      <div className="todo-header-badges">
-        {isEditingType ? (
-          <div className="type-input-wrapper">
-            <input
-              ref={typeInputRef}
-              type="text"
-              className="type-input"
-              placeholder="Type name..."
-              value={newType}
-              onChange={(e) => setNewType(e.target.value)}
-              onKeyDown={handleTypeKeyDown}
-              onBlur={(e) => {
-                const relatedTarget = e.relatedTarget as HTMLElement;
-                if (relatedTarget && relatedTarget.classList.contains('suggestion-item')) {
-                  return;
-                }
-                setTimeout(() => {
-                  handleSaveType();
-                  setTypeSuggestions([]);
-                }, 200);
-              }}
-            />
-            <button
-              type="button"
-              className="type-remove-btn"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleRemoveType();
-              }}
-              title="Remove type"
-            >
-              <X size={12} />
-            </button>
-            {typeSuggestions.length > 0 && (
-              <div className="autocomplete-dropdown type-dropdown">
-                {typeSuggestions.map((suggestion, index) => (
-                  <div
-                    key={suggestion}
-                    className={`suggestion-item ${index === selectedTypeIndex ? 'selected' : ''}`}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      if (onUpdateType) {
-                        onUpdateType(todo.id, suggestion);
-                        setIsEditingType(false);
-                        setNewType('');
-                      }
-                    }}
-                    onMouseEnter={() => setSelectedTypeIndex(index)}
-                  >
-                    <Package size={12} />
-                    {suggestion}
-                  </div>
-                ))}
-              </div>
+        <div className="todo-drag-section">
+          <div className="todo-actions">
+            {todo.note ? (
+              <button
+                className="note-link-btn"
+                onClick={handleOpenNote}
+                title="Open note in Obsidian"
+              >
+                <ExternalLink size={14} />
+              </button>
+            ) : (
+              <button
+                className="create-note-btn"
+                onClick={handleCreateNote}
+                title="Create note"
+              >
+                <FileText size={14} />
+              </button>
             )}
           </div>
-        ) : (
-          todo.type ? (
-            <span 
-              className="todo-type-badge"
-              onDoubleClick={() => {
-                setIsEditingType(true);
-                setNewType(todo.type || '');
-              }}
-              title="Double-click to edit"
-            >
-              <Package size={12} />
-              {todo.type}
-            </span>
-          ) : (
-            <button
-              className="add-type-btn"
-              onClick={() => {
-                setIsEditingType(true);
-                setNewType('');
-              }}
-              title="Add type"
-            >
-              <Package size={12} />
-              Add type
-            </button>
-          )
-        )}
-        {todo.tags.map((tag, index) => {
-          const color = getTagColor(tag);
-          return (
-            <span
-              key={index}
-              className="todo-tag-badge"
-              style={{
-                backgroundColor: color.bg,
-                color: color.text,
-                borderColor: color.border
-              }}
-            >
-              #{tag}
-              {isEditingTags && (
+          <div className="todo-drag-handle" {...attributes} {...listeners}>
+            <GripVertical size={16} />
+          </div>
+        </div>
+        <div className="todo-card-content">
+          {/* Tags and Type at the top */}
+          <div className="todo-header-badges">
+            {isEditingType ? (
+              <div className="type-input-wrapper">
+                <input
+                  ref={typeInputRef}
+                  type="text"
+                  className="type-input"
+                  placeholder="Type name..."
+                  value={newType}
+                  onChange={(e) => setNewType(e.target.value)}
+                  onKeyDown={handleTypeKeyDown}
+                  onBlur={(e) => {
+                    const relatedTarget = e.relatedTarget as HTMLElement;
+                    if (relatedTarget && relatedTarget.classList.contains('suggestion-item')) {
+                      return;
+                    }
+                    setTimeout(() => {
+                      handleSaveType();
+                      setTypeSuggestions([]);
+                    }, 200);
+                  }}
+                />
                 <button
                   type="button"
-                  className="tag-remove-btn"
+                  className="type-remove-btn"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    handleRemoveTag(tag);
+                    handleRemoveType();
                   }}
-                  title="Remove tag"
+                  title="Remove type"
                 >
                   <X size={12} />
                 </button>
-              )}
-            </span>
-          );
-        })}
-        {isEditingTags ? (
-          <div className="tag-input-wrapper">
-            <input
-              ref={tagInputRef}
-              type="text"
-              className="tag-input"
-              placeholder="New tag..."
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              onKeyDown={handleTagKeyDown}
-              onBlur={(e) => {
-                // Check if the blur is moving to a tag remove button or suggestion
-                const relatedTarget = e.relatedTarget as HTMLElement;
-                if (relatedTarget && (relatedTarget.classList.contains('tag-remove-btn') || relatedTarget.classList.contains('suggestion-item'))) {
-                  return;
-                }
-                
-                if (!newTag.trim()) {
-                  setTimeout(() => {
-                    setIsEditingTags(false);
-                    setTagSuggestions([]);
-                  }, 200);
-                }
-              }}
-            />
-            {tagSuggestions.length > 0 && (
-              <div className="autocomplete-dropdown">
-                {tagSuggestions.map((suggestion, index) => (
-                  <div
-                    key={suggestion}
-                    className={`suggestion-item ${index === selectedTagIndex ? 'selected' : ''}`}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      if (onUpdateTags) {
-                        onUpdateTags(todo.id, [...todo.tags, suggestion]);
-                        setNewTag('');
-                      }
-                    }}
-                    onMouseEnter={() => setSelectedTagIndex(index)}
-                  >
-                    #{suggestion}
+                {typeSuggestions.length > 0 && (
+                  <div className="autocomplete-dropdown type-dropdown">
+                    {typeSuggestions.map((suggestion, index) => (
+                      <div
+                        key={suggestion}
+                        className={`suggestion-item ${index === selectedTypeIndex ? 'selected' : ''}`}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          if (onUpdateType) {
+                            onUpdateType(todo.id, suggestion);
+                            setIsEditingType(false);
+                            setNewType('');
+                          }
+                        }}
+                        onMouseEnter={() => setSelectedTypeIndex(index)}
+                      >
+                        <Package size={12} />
+                        {suggestion}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <button
-            className="add-tag-btn"
-            onClick={() => setIsEditingTags(true)}
-            title="Add tag"
-          >
-            <Plus size={12} />
-            Add tag
-          </button>
-        )}
-      </div>
-
-      <div className="todo-content" onDoubleClick={handleDoubleClick}>
-        {isEditing ? (
-          <input
-            ref={inputRef}
-            type="text"
-            className="todo-edit-input"
-            value={editText}
-            onChange={(e) => setEditText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={handleBlur}
-            onClick={(e) => e.stopPropagation()}
-          />
-        ) : (
-          todo.text
-        )}
-      </div>
-
-      <div className="todo-metadata">
-        <div className="todo-deadline-section">
-          <div 
-            ref={deadlineRef}
-            className={`todo-deadline ${todo.deadline ? `deadline-${getDeadlineStatus()}` : ''}`}
-            onClick={handleOpenCalendar}
-            title="クリックして締切を設定"
-          >
-            <CalendarDays size={14} />
-            {todo.deadline ? (
-              <>
-                <span>{formatDeadline(todo.deadline)}</span>
-                {todo.deadlineTime && (
-                  <>
-                    <Clock size={14} />
-                    <span>{todo.deadlineTime}</span>
-                  </>
                 )}
-              </>
+              </div>
             ) : (
-              <span className="deadline-placeholder">締切を設定</span>
-            )}
-          </div>
-          {isEditingDeadline && ReactDOM.createPortal(
-            <>
-              <div 
-                className="deadline-picker-backdrop"
-                onClick={() => setIsEditingDeadline(false)}
-              />
-              <div 
-                className="deadline-picker-wrapper"
-                style={{
-                  top: `${calendarPosition.top}px`,
-                  left: `${calendarPosition.left}px`
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <DatePicker
-                  selected={selectedDate}
-                  onChange={handleDeadlineChange}
-                  dateFormat="yyyy/MM/dd"
-                  locale={ja}
-                  placeholderText="締切日を選択"
-                  isClearable
-                  inline
-                  calendarClassName="deadline-calendar"
-                />
-                <div className="deadline-time-section">
-                  <Clock size={14} />
-                  <input
-                    type="time"
-                    value={selectedTime}
-                    onChange={handleTimeChange}
-                    className="deadline-time-input"
-                    placeholder="時刻"
-                  />
-                </div>
+              todo.type ? (
+                <span
+                  className="todo-type-badge"
+                  onDoubleClick={() => {
+                    setIsEditingType(true);
+                    setNewType(todo.type || '');
+                  }}
+                  title="Double-click to edit"
+                >
+                  <Package size={12} />
+                  {todo.type}
+                </span>
+              ) : (
                 <button
-                  className="deadline-close-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsEditingDeadline(false);
+                  className="add-type-btn"
+                  onClick={() => {
+                    setIsEditingType(true);
+                    setNewType('');
+                  }}
+                  title="Add type"
+                >
+                  <Package size={12} />
+                  Add type
+                </button>
+              )
+            )}
+            {todo.tags.map((tag, index) => {
+              const color = getTagColor(tag);
+              return (
+                <span
+                  key={index}
+                  className="todo-tag-badge"
+                  style={{
+                    backgroundColor: color.bg,
+                    color: color.text,
+                    borderColor: color.border
                   }}
                 >
-                  <X size={16} />
-                </button>
+                  #{tag}
+                  {isEditingTags && (
+                    <button
+                      type="button"
+                      className="tag-remove-btn"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleRemoveTag(tag);
+                      }}
+                      title="Remove tag"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </span>
+              );
+            })}
+            {isEditingTags ? (
+              <div className="tag-input-wrapper">
+                <input
+                  ref={tagInputRef}
+                  type="text"
+                  className="tag-input"
+                  placeholder="New tag..."
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  onBlur={(e) => {
+                    // Check if the blur is moving to a tag remove button or suggestion
+                    const relatedTarget = e.relatedTarget as HTMLElement;
+                    if (relatedTarget && (relatedTarget.classList.contains('tag-remove-btn') || relatedTarget.classList.contains('suggestion-item'))) {
+                      return;
+                    }
+
+                    if (!newTag.trim()) {
+                      setTimeout(() => {
+                        setIsEditingTags(false);
+                        setTagSuggestions([]);
+                      }, 200);
+                    }
+                  }}
+                />
+                {tagSuggestions.length > 0 && (
+                  <div className="autocomplete-dropdown">
+                    {tagSuggestions.map((suggestion, index) => (
+                      <div
+                        key={suggestion}
+                        className={`suggestion-item ${index === selectedTagIndex ? 'selected' : ''}`}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          if (onUpdateTags) {
+                            onUpdateTags(todo.id, [...todo.tags, suggestion]);
+                            setNewTag('');
+                          }
+                        }}
+                        onMouseEnter={() => setSelectedTagIndex(index)}
+                      >
+                        #{suggestion}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </>,
-            document.body
-          )}
+            ) : (
+              <button
+                className="add-tag-btn"
+                onClick={() => setIsEditingTags(true)}
+                title="Add tag"
+              >
+                <Plus size={12} />
+                Add tag
+              </button>
+            )}
+          </div>
+
+          <div className="todo-content" onDoubleClick={handleDoubleClick}>
+            {isEditing ? (
+              <input
+                ref={inputRef}
+                type="text"
+                className="todo-edit-input"
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onBlur={handleBlur}
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              todo.text
+            )}
+          </div>
+
+          <div className="todo-metadata">
+            <div className="todo-deadline-section">
+              <div
+                ref={deadlineRef}
+                className={`todo-deadline ${todo.deadline ? `deadline-${getDeadlineStatus()}` : ''}`}
+                onClick={handleOpenCalendar}
+                title="クリックして締切を設定"
+              >
+                <CalendarDays size={14} />
+                {todo.deadline ? (
+                  <>
+                    <span>{formatDeadline(todo.deadline)}</span>
+                    {todo.deadlineTime && (
+                      <>
+                        <Clock size={14} />
+                        <span>{todo.deadlineTime}</span>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <span className="deadline-placeholder">締切を設定</span>
+                )}
+              </div>
+              {isEditingDeadline && ReactDOM.createPortal(
+                <>
+                  <div
+                    className="deadline-picker-backdrop"
+                    onClick={() => setIsEditingDeadline(false)}
+                  />
+                  <div
+                    className="deadline-picker-wrapper"
+                    style={{
+                      top: `${calendarPosition.top}px`,
+                      left: `${calendarPosition.left}px`
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <DatePicker
+                      selected={selectedDate}
+                      onChange={handleDeadlineChange}
+                      dateFormat="yyyy/MM/dd"
+                      locale={ja}
+                      placeholderText="締切日を選択"
+                      isClearable
+                      inline
+                      calendarClassName="deadline-calendar"
+                    />
+                    <div className="deadline-time-section">
+                      <Clock size={14} />
+                      <input
+                        type="time"
+                        value={selectedTime}
+                        onChange={handleTimeChange}
+                        className="deadline-time-input"
+                        placeholder="時刻"
+                      />
+                    </div>
+                    <button
+                      className="deadline-close-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsEditingDeadline(false);
+                      }}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                </>,
+                document.body
+              )}
+            </div>
+
+            {calculateTotalTime() && (
+              <div className="todo-total-time">
+                <Timer size={14} />
+                <span>{calculateTotalTime()}</span>
+              </div>
+            )}
+
+            {todo.doneAt && (
+              <div className="todo-done">
+                <CheckCircle size={14} />
+                <span>{formatTimestamp(todo.doneAt)}</span>
+              </div>
+            )}
+
+            {todo.rejectAt && (
+              <div className="todo-reject">
+                <XCircle size={14} />
+                <span>{formatTimestamp(todo.rejectAt)}</span>
+              </div>
+            )}
+          </div>
         </div>
-
-        {calculateTotalTime() && (
-          <div className="todo-total-time">
-            <Timer size={14} />
-            <span>{calculateTotalTime()}</span>
-          </div>
-        )}
-
-        {todo.doneAt && (
-          <div className="todo-done">
-            <CheckCircle size={14} />
-            <span>{formatTimestamp(todo.doneAt)}</span>
-          </div>
-        )}
-
-        {todo.rejectAt && (
-          <div className="todo-reject">
-            <XCircle size={14} />
-            <span>{formatTimestamp(todo.rejectAt)}</span>
-          </div>
-        )}
       </div>
-      </div>
-    </div>
     </>
   );
 };

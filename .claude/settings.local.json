@@ -7,7 +7,17 @@
       "Bash(npm run dev:*)",
       "Bash(pkill:*)",
       "Bash(npm install:*)",
-      "Bash(npm run typecheck:*)"
+      "Bash(npm run typecheck:*)",
+      "Bash(find:*)",
+      "Bash(npx playwright:*)",
+      "Bash(mkdir:*)",
+      "mcp__playwright-ccp__browser_navigate",
+      "mcp__playwright-ccp__browser_click",
+      "mcp__playwright-ccp__browser_wait_for",
+      "Bash(kill:*)",
+      "mcp__playwright-ccp__browser_close",
+      "Bash(npm run test:e2e:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

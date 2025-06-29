@@ -19,7 +19,10 @@ function App() {
 
   useEffect(() => {
     // Auto-load from current directory on startup
-    loadFromCurrentDirectory();
+    // Skip auto-load in test mode
+    if (!(window as any).__TEST_MODE__) {
+      loadFromCurrentDirectory();
+    }
   }, []);
 
   useEffect(() => {

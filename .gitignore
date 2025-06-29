@@ -235,3 +235,9 @@ Cargo.lock
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,macos,rust,node
+
+
+playwright-report
+test-results
+
+E2E_TEST_SUMMARY.md
