@@ -159,25 +159,25 @@ const createFollowUpTodo = (originalTodo: Todo, todoLaneId: string, order: numbe
 const enforceWipLimit = (lanes: KanbanData['lanes'], movingTodoId: string): KanbanData['lanes'] => {
   const doingLane = lanes.find(lane => lane.name === 'Doing');
   const pendingLane = lanes.find(lane => lane.name === 'Pending');
-  
+
   if (!doingLane || !pendingLane) return lanes;
-  
+
   // Find existing todos in Doing (excluding the one being moved)
   const existingDoingTodos = doingLane.todos.filter(todo => todo.id !== movingTodoId);
-  
+
   if (existingDoingTodos.length === 0) return lanes;
-  
+
   // Move the first existing todo to Pending
   const todoToMove = existingDoingTodos[0];
   const now = format(new Date(), 'yyyyMMddHHmm');
-  
+
   // Update the todo's history
   const updatedTodo = {
     ...todoToMove,
     laneId: pendingLane.id,
     doingPendingHistory: updateLastHistoryEntry(todoToMove.doingPendingHistory, now)
   };
-  
+
   // Update lanes
   return updateMultipleLanes(lanes, [
     { laneId: doingLane.id, updater: lane => removeTodoFromLane(lane, todoToMove.id) },
@@ -372,7 +372,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
     const laneWithTodo = data.lanes.find(lane =>
       lane.todos.some(todo => todo.id === todoId)
     );
-    
+
     if (!laneWithTodo) return;
 
     const newData: KanbanData = {
@@ -395,7 +395,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
     const laneWithTodo = data.lanes.find(lane =>
       lane.todos.some(todo => todo.id === todoId)
     );
-    
+
     if (!laneWithTodo) return;
 
     const newData: KanbanData = {
@@ -418,7 +418,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
     const laneWithTodo = data.lanes.find(lane =>
       lane.todos.some(todo => todo.id === todoId)
     );
-    
+
     if (!laneWithTodo) return;
 
     const newData: KanbanData = {
@@ -441,7 +441,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
     const laneWithTodo = data.lanes.find(lane =>
       lane.todos.some(todo => todo.id === todoId)
     );
-    
+
     if (!laneWithTodo) return;
 
     const newData: KanbanData = {
@@ -464,7 +464,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
     const laneWithTodo = data.lanes.find(lane =>
       lane.todos.some(todo => todo.id === todoId)
     );
-    
+
     if (!laneWithTodo) return;
 
     const newData: KanbanData = {
@@ -488,7 +488,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
 
     try {
       const userConfirmed = await confirm(
-        `Archive ${doneLane.todos.length} completed task${doneLane.todos.length > 1 ? 's' : ''}?`, 
+        `Archive ${doneLane.todos.length} completed task${doneLane.todos.length > 1 ? 's' : ''}?`,
         {
           title: 'Archive Done Tasks',
           okLabel: 'Archive',
@@ -500,11 +500,11 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
 
       const timestamp = format(new Date(), 'yyyyMMddHHmm');
       const archiveFileName = `ARCHIVE_${timestamp}.md`;
-      
+
       // Create archive content
       let archiveContent = `# Archive - ${format(new Date(), 'yyyy-MM-dd HH:mm')}\n\n`;
       archiveContent += `## Done Tasks\n\n`;
-      
+
       doneLane.todos.forEach(todo => {
         archiveContent += `- [x] ${todo.text}`;
         if (todo.tags && todo.tags.length > 0) {
@@ -520,10 +520,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
       });
 
       // Write archive file
-      await invoke('write_archive_file', { 
-        folderPath, 
+      await invoke('write_archive_file', {
+        folderPath,
         fileName: archiveFileName,
-        content: archiveContent 
+        content: archiveContent
       });
 
       // Remove todos from Done lane
@@ -547,7 +547,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
     const activeIdStr = active.id as string;
 
     setActiveId(activeIdStr);
-    
+
     // Check if dragging a lane or a todo
     const draggedLane = data.lanes.find(lane => lane.id === activeIdStr);
     if (draggedLane) {
@@ -586,9 +586,9 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
       if (activeId !== overId) {
         const oldIndex = data.lanes.findIndex(lane => lane.id === activeId);
         const newIndex = data.lanes.findIndex(lane => lane.id === overId);
-        
+
         const newLanes = arrayMove(data.lanes, oldIndex, newIndex);
-        
+
         // Update order for all lanes
         const reorderedLanes = newLanes.map((lane, index) => ({
           ...lane,
@@ -603,7 +603,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ data, folderPath, onDa
         onDataChange(newData);
         await saveToFile(newData);
       }
-      
+
       setActiveId(null);
       setActiveLane(null);
       return;
