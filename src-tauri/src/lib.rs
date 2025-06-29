@@ -12,6 +12,8 @@ struct AppState {
     file_watcher: Mutex<Option<RecommendedWatcher>>,
 }
 
+/// フォルダ選択ダイアログを開いてフォルダパスを返す
+/// 現在はカレントディレクトリを返すデフォルト実装
 #[tauri::command]
 fn select_folder() -> Result<String, String> {
     use std::env;
@@ -20,6 +22,15 @@ fn select_folder() -> Result<String, String> {
     Ok(env::current_dir().unwrap().to_string_lossy().to_string())
 }
 
+/// 指定されたフォルダパスからtodo.mdファイルを読み込む
+/// ファイルが存在しない場合は、デフォルトのレーン構造を持つ新しいファイルを作成する
+///
+/// # Arguments
+/// * `folder_path` - todo.mdファイルが格納されているフォルダのパス
+///
+/// # Returns
+/// * `Ok(String)` - ファイルの内容
+/// * `Err(String)` - エラーメッセージ
 #[tauri::command]
 fn read_todo_file(folder_path: String) -> Result<String, String> {
     use std::fs;
@@ -36,6 +47,15 @@ fn read_todo_file(folder_path: String) -> Result<String, String> {
     fs::read_to_string(todo_path).map_err(|e| e.to_string())
 }
 
+/// todo.mdファイルに内容を書き込む
+///
+/// # Arguments
+/// * `folder_path` - todo.mdファイルが格納されているフォルダのパス
+/// * `content` - 書き込む内容
+///
+/// # Returns
+/// * `Ok(())` - 成功
+/// * `Err(String)` - エラーメッセージ
 #[tauri::command]
 fn write_todo_file(folder_path: String, content: String) -> Result<(), String> {
     use std::fs;
@@ -45,6 +65,15 @@ fn write_todo_file(folder_path: String, content: String) -> Result<(), String> {
     fs::write(todo_path, content).map_err(|e| e.to_string())
 }
 
+/// automation.mdファイルを読み込む
+/// ファイルが存在しない場合は空文字列を返す
+///
+/// # Arguments
+/// * `folder_path` - automation.mdファイルが格納されているフォルダのパス
+///
+/// # Returns
+/// * `Ok(String)` - ファイルの内容（存在しない場合は空文字列）
+/// * `Err(String)` - エラーメッセージ
 #[tauri::command]
 fn read_automation_file(folder_path: String) -> Result<String, String> {
     use std::fs;
@@ -59,6 +88,17 @@ fn read_automation_file(folder_path: String) -> Result<String, String> {
     fs::read_to_string(automation_path).map_err(|e| e.to_string())
 }
 
+/// todo.mdファイルの変更を監視するウォッチャーを開始する
+/// ファイルが変更されたときに"file-changed"イベントをフロントエンドに送信する
+///
+/// # Arguments
+/// * `app_handle` - Tauriアプリケーションハンドル
+/// * `state` - アプリケーション状態
+/// * `folder_path` - 監視するtodo.mdファイルがあるフォルダのパス
+///
+/// # Returns
+/// * `Ok(())` - 成功
+/// * `Err(String)` - エラーメッセージ
 #[tauri::command]
 fn start_file_watcher(
     app_handle: tauri::AppHandle,
@@ -108,6 +148,14 @@ fn start_file_watcher(
     Ok(())
 }
 
+/// ファイルウォッチャーを停止する
+///
+/// # Arguments
+/// * `state` - アプリケーション状態
+///
+/// # Returns
+/// * `Ok(())` - 成功
+/// * `Err(String)` - エラーメッセージ
 #[tauri::command]
 fn stop_file_watcher(state: tauri::State<AppState>) -> Result<(), String> {
     let mut file_watcher = state.file_watcher.lock().unwrap();
@@ -115,6 +163,16 @@ fn stop_file_watcher(state: tauri::State<AppState>) -> Result<(), String> {
     Ok(())
 }
 
+/// TODOアイテムに関連するノートファイルを作成する
+/// ファイルが既に存在する場合は作成せず、既存のファイルパスを返す
+///
+/// # Arguments
+/// * `folder_path` - ノートファイルを作成するベースフォルダのパス
+/// * `todo_text` - TODOアイテムのテキスト（ファイル名に使用）
+///
+/// # Returns
+/// * `Ok(String)` - 作成または既存のノートファイルの相対パス
+/// * `Err(String)` - エラーメッセージ
 #[tauri::command]
 fn create_note_file(folder_path: String, todo_text: String) -> Result<String, String> {
     use chrono::Local;
@@ -135,9 +193,8 @@ fn create_note_file(folder_path: String, todo_text: String) -> Result<String, St
         .trim()
         .replace(' ', "_");
 
-    // Create filename with date
-    let date_str = Local::now().format("%Y%m%d").to_string();
-    let filename = format!("{}_{}.md", safe_text, date_str);
+    // Create filename without date
+    let filename = format!("{}.md", safe_text);
     let file_path = notes_dir.join(&filename);
 
     // Create the file with initial content if it doesn't exist
@@ -154,6 +211,16 @@ fn create_note_file(folder_path: String, todo_text: String) -> Result<String, St
     Ok(format!("notes/{}", filename))
 }
 
+/// 指定されたノートファイルをObsidianで開く
+/// プラットフォーム固有のコマンドを使用してObsidian URIスキームを起動する
+///
+/// # Arguments
+/// * `folder_path` - ベースフォルダのパス
+/// * `note_path` - ノートファイルの相対パス
+///
+/// # Returns
+/// * `Ok(())` - 成功
+/// * `Err(String)` - エラーメッセージ
 #[tauri::command]
 fn open_in_obsidian(folder_path: String, note_path: String) -> Result<(), String> {
     use std::path::Path;
@@ -195,6 +262,17 @@ fn open_in_obsidian(folder_path: String, note_path: String) -> Result<(), String
     Ok(())
 }
 
+/// アーカイブファイルを作成して内容を書き込む
+/// 完了したTODOアイテムをアーカイブするために使用される
+///
+/// # Arguments
+/// * `folder_path` - アーカイブファイルを作成するフォルダのパス
+/// * `file_name` - アーカイブファイル名
+/// * `content` - アーカイブファイルの内容
+///
+/// # Returns
+/// * `Ok(())` - 成功
+/// * `Err(String)` - エラーメッセージ
 #[tauri::command]
 fn write_archive_file(
     folder_path: String,
@@ -208,6 +286,8 @@ fn write_archive_file(
     fs::write(archive_path, content).map_err(|e| e.to_string())
 }
 
+/// Tauriアプリケーションのエントリポイント
+/// アプリケーションを初期化し、すべてのコマンドハンドラーを登録する
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
