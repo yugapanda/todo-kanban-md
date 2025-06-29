@@ -25,6 +25,11 @@ interface TodoCardProps {
   allTypes?: string[];
 }
 
+/**
+ * タグ名に基づいて一貫した色を生成する
+ * @param tag - タグ名
+ * @returns タグの背景色、テキスト色、ボーダー色を含むオブジェクト
+ */
 const getTagColor = (tag: string) => {
   // Generate consistent color based on tag name
   const colors = [
@@ -134,6 +139,10 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
   }, [newType, allTypes, isEditingType]);
 
 
+  /**
+   * TODOテキストのダブルクリックハンドラー - 編集モードに切り替える
+   * @param e - マウスイベント
+   */
   const handleDoubleClick = (e: React.MouseEvent) => {
     // Prevent dragging while editing
     if (!isDragging && !isSortableDragging) {
@@ -143,6 +152,9 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     }
   };
 
+  /**
+   * 編集中のTODOテキストを保存する
+   */
   const handleSave = () => {
     const trimmedText = editText.trim();
     if (trimmedText && trimmedText !== todo.text && onUpdateTodo) {
@@ -151,11 +163,18 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     setIsEditing(false);
   };
 
+  /**
+   * TODOテキストの編集をキャンセルして元のテキストに戻す
+   */
   const handleCancel = () => {
     setEditText(todo.text);
     setIsEditing(false);
   };
 
+  /**
+   * TODOテキスト編集時のキーボードイベントハンドラー
+   * @param e - キーボードイベント (Cmd/Ctrl+Enter: 保存, Esc: キャンセル)
+   */
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
@@ -165,10 +184,16 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     }
   };
 
+  /**
+   * TODOテキスト入力欄のフォーカスが外れた時に保存する
+   */
   const handleBlur = () => {
     handleSave();
   };
 
+  /**
+   * 新しいタグをTODOに追加する
+   */
   const handleAddTag = () => {
     const trimmedTag = newTag.trim();
     if (trimmedTag && !todo.tags.includes(trimmedTag) && onUpdateTags) {
@@ -177,12 +202,20 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     }
   };
 
+  /**
+   * 指定されたタグをTODOから削除する
+   * @param tagToRemove - 削除するタグ名
+   */
   const handleRemoveTag = (tagToRemove: string) => {
     if (onUpdateTags) {
       onUpdateTags(todo.id, todo.tags.filter(tag => tag !== tagToRemove));
     }
   };
 
+  /**
+   * タグ入力時のキーボードイベントハンドラー
+   * @param e - キーボードイベント (Enter: タグ追加, Esc: キャンセル, 矢印: 候補選択, Tab: オートコンプリート)
+   */
   const handleTagKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -214,6 +247,9 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     }
   };
 
+  /**
+   * 編集中のタイプを保存する
+   */
   const handleSaveType = () => {
     const trimmedType = newType.trim();
     if (onUpdateType) {
@@ -222,6 +258,9 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     setIsEditingType(false);
   };
 
+  /**
+   * TODOのタイプを削除する
+   */
   const handleRemoveType = () => {
     if (onUpdateType) {
       onUpdateType(todo.id, undefined);
@@ -229,6 +268,10 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     setIsEditingType(false);
   };
 
+  /**
+   * タイプ入力時のキーボードイベントハンドラー
+   * @param e - キーボードイベント (Enter: タイプ設定, Esc: キャンセル, 矢印: 候補選択, Tab: オートコンプリート)
+   */
   const handleTypeKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -261,6 +304,10 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     }
   };
 
+  /**
+   * TODOに関連するノートファイルを作成または既存のノートを開く
+   * ノートが存在しない場合は新規作成し、存在する場合はそのままObsidianで開く
+   */
   const handleCreateNote = async () => {
     if (!folderPath || !onUpdateNote) return;
 
@@ -270,11 +317,20 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
         todoText: todo.text
       });
       onUpdateNote(todo.id, notePath);
+
+      // Open the note immediately after creating/finding it
+      await invoke('open_in_obsidian', {
+        folderPath,
+        notePath: notePath
+      });
     } catch (error) {
-      console.error('Failed to create note:', error);
+      console.error('Failed to create/open note:', error);
     }
   };
 
+  /**
+   * 既存のノートファイルをObsidianで開く
+   */
   const handleOpenNote = async () => {
     if (!folderPath || !todo.note) return;
 
@@ -288,6 +344,10 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     }
   };
 
+  /**
+   * 締切日を変更する
+   * @param date - 新しい締切日 (nullの場合は締切を削除)
+   */
   const handleDeadlineChange = (date: Date | null) => {
     setSelectedDate(date);
     if (date && onUpdateDeadline) {
@@ -299,6 +359,10 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     }
   };
 
+  /**
+   * 締切時刻を変更する
+   * @param e - 時刻入力の変更イベント
+   */
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const time = e.target.value;
     setSelectedTime(time);
@@ -308,6 +372,10 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     }
   };
 
+  /**
+   * カレンダーピッカーを開く
+   * @param e - マウスイベント
+   */
   const handleOpenCalendar = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (deadlineRef.current) {
@@ -320,6 +388,10 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     setIsEditingDeadline(true);
   };
 
+  /**
+   * 締切日のステータスを判定する
+   * @returns 'overdue' (期限切れ), 'today' (今日), 'soon' (3日以内), 'future' (それ以降), または null
+   */
   const getDeadlineStatus = () => {
     if (!todo.deadline) return null;
 
@@ -342,6 +414,11 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     }
   };
 
+  /**
+   * 締切日を日本語形式でフォーマットする
+   * @param deadline - yyyyMMdd形式の締切日文字列
+   * @returns フォーマットされた日付文字列 (例: "3月15日(金)")
+   */
   const formatDeadline = (deadline: string) => {
     try {
       const date = parse(deadline, 'yyyyMMdd', new Date());
@@ -351,6 +428,11 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     }
   };
 
+  /**
+   * タイムスタンプを読みやすい形式にフォーマットする
+   * @param timestamp - yyyyMMddHHmm形式のタイムスタンプ文字列
+   * @returns フォーマットされた日時文字列 (例: "Mar 15, 2024 14:30")
+   */
   const formatTimestamp = (timestamp: string) => {
     try {
       const date = parse(timestamp, 'yyyyMMddHHmm', new Date());
@@ -360,7 +442,10 @@ export const TodoCard: React.FC<TodoCardProps> = ({ todo, isDragging, folderPath
     }
   };
 
-  // Calculate total working time from doing/pending history
+  /**
+   * TODOの作業履歴から合計作業時間を計算する
+   * @returns フォーマットされた時間文字列 (例: "2h 30m") または null
+   */
   const calculateTotalTime = () => {
     let totalMinutes = 0;
 
